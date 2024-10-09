@@ -58,9 +58,9 @@ class Blockchain {
 
     // Método para minerar um novo bloco.
     mine(data) {
-        const newBlock = this.generateNextBlock(data);
+        const nextBlock = this.generateNextBlock(data);
         try {
-            this.addBlock(newBlock);
+            this.addBlock(nextBlock);
         } catch (err) {
           throw err;  
         };
@@ -108,9 +108,9 @@ class Blockchain {
     }
 
     // Método para adicionar novos blocos à blockchain.
-    addBlock(newBlock) {
-        if (this.isValidNewBlock(newBlock, this.latestBlock)) {
-            this.blockchain.push(newBlock);
+    addBlock(nextBlock) {
+        if (this.isValidNextBlock(nextBlock, this.latestBlock)) {
+            this.blockchain.push(nextBlock);
         } else {
           throw "Error: Invalid block";  
         }
