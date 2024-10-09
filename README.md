@@ -46,6 +46,6 @@ Este projeto é uma demonstração de uma blockchain simples chamada Aurelia, de
 * Este projeto é apenas uma demonstração educacional e não se destina ao uso em produção.
 * A moeda "Éfira", será mencionada no código, é fictícia e neste momento não deve possuir valor real.
 
-**Licença:**
+## Licença
 
-MIT License
+Este repositório está licenciado sob a licença [MIT](https://choosealicense.com/licenses/mit/).
