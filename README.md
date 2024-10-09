@@ -1,6 +1,6 @@
 # Aurelia Demo
 
-## Demonstração de Blockchain para Crypto Submersion / Estágio AWS
+## Demonstração de Blockchain para Crypto Submersion
 
 Este projeto é uma demonstração de uma blockchain simples chamada Aurelia, desenvolvida como parte de um desafio da Crypto Submersion e um exercício do estágio em AWS Blockchain.
 
