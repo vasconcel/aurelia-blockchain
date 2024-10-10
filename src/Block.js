@@ -2,7 +2,8 @@
 const crypto = require("crypto");
 
 // Função utilitária para calcular o hash.
-function calculateBlockHash(index, previousHash, timestamp, transactions, nonce) {
+function calculateBlockHash(block) {
+    const { index, previousHash, timestamp, transactions, nonce } = block;
     const data = JSON.stringify({ index, previousHash, timestamp, transactions, nonce });
     return crypto
         .createHash("sha256")
@@ -35,4 +36,4 @@ class Block {
     }
 }
 
-module.exports = Block;
+module.exports = { Block, calculateBlockHash };
