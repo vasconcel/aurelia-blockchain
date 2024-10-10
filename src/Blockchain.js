@@ -1,7 +1,6 @@
 // Importações.
 const { Block, calculateBlockHash } = require("./Block.js");
 const Transaction = require("./Transaction.js");
-const crypto = require("crypto");
 
 // Classe Blockchain.
 class Blockchain {
