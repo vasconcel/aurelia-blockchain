@@ -2,7 +2,7 @@
 const crypto = require("crypto");
 
 // Função utilitária para calcular o hash.
-function calculateBlockHash(block) {
+function hashBlockData(block) {
     const { index, previousHash, timestamp, transactions, nonce } = block;
     const data = JSON.stringify({ index, previousHash, timestamp, transactions, nonce });
     return crypto
@@ -25,9 +25,9 @@ class Block {
     // Método estático de retorno do bloco gênesis.
     static get genesis() {
         const genesisBlock = new Block(0, "0", 1678886400000, [], null, 0);
-        genesisBlock.hash = calculateBlockHash(genesisBlock);
+        genesisBlock.hash = hashBlockData(genesisBlock);
         return genesisBlock;
     }
 }
 
-module.exports = { Block, calculateBlockHash };
+module.exports = { Block, hashBlockData };

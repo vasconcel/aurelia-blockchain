@@ -1,5 +1,5 @@
 // Importações.
-const { Block, calculateBlockHash } = require("./Block.js");
+const { Block, hashBlockData } = require("./Block.js");
 const Transaction = require("./Transaction.js");
 
 // Classe Blockchain.
@@ -25,9 +25,9 @@ class Blockchain {
     }
 
     // Função para calcular o hash de um bloco.
-    calculateHashForBlock(block) {
+    computeBlockHash(block) {
         const { index, previousHash, timestamp, transactions, nonce } = block;
-        return calculateBlockHash(block);
+        return hashBlockData(index, previousHash, timestamp, transactions, nonce);
     }
 
     // Método para minerar um novo bloco.
@@ -48,7 +48,7 @@ class Blockchain {
         const previousHash = this.latestBlock.hash;
         let timestamp = new Date().getTime();
         let nonce = 0;
-        let nextHash = calculateBlockHash(
+        let nextHash = hashBlockData(
             nextIndex,
             previousHash,
             timestamp,
@@ -60,7 +60,7 @@ class Blockchain {
         while (!this.isValidHashDifficulty(nextHash)) {
             nonce += 1;
             timestamp = new Date().getTime();
-            nextHash = calculateBlockHash(
+            nextHash = hashBlockData(
                 nextIndex,
                 previousHash,
                 timestamp,
@@ -93,7 +93,7 @@ class Blockchain {
 
     // Função para manter a integridade da blockchain.
     isValidNextBlock(nextBlock, previousBlock) {
-        const nextBlockHash = calculateBlockHash(nextBlock);
+        const nextBlockHash = this.computeBlockHash(nextBlock);
         if (previousBlock.index + 1 !== nextBlock.index) return "Invalid index";
         if (previousBlock.hash !== nextBlock.previousHash) return "Invalid previous hash";
         if (nextBlockHash !== nextBlock.hash) return "Invalid block hash";
