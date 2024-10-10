@@ -5,8 +5,8 @@ const Transaction = require("./Transaction.js");
 // Classe Blockchain.
 class Blockchain {
     constructor() {
-        this.blockchain = [Block.genesis()];
-        this.difficulty = 3;
+        this.blockchain = [Block.genesis];
+        this.difficulty = 0;
     }
 
     // Método para retornar a blockchain.

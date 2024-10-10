@@ -1,6 +1,6 @@
 // Importações.
-const Blockchain = require("./Blockchain.js");
-const Transaction = require("./Transaction.js");
+const Blockchain = require("./src/Blockchain.js");
+const Transaction = require("./src/Transaction.js");
 
 // Instanciando uma nova blockchain.
 const myBlockchain = new Blockchain();
