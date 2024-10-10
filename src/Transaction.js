@@ -13,19 +13,18 @@ class Transaction {
 
     // Método para calcular o hash da transação.
     calculateHash() {
-        const stringifiedTransactions = JSON.stringify(transactions);
         return crypto
-            .createHash('sha256')
+            .createHash("sha256")
             .update(this.sender + this.recipient + this.amount + this.timestamp)
-            .digest('hex');
+            .digest("hex");
     }
 
     // Método para exibir informações da transação.
     displayTransaction() {
-        return `Transação: ${this.transactionHash}
-                De: ${this.sender} 
-                Para: ${this.recipient}
-                Valor: ${this.amount}
+        return `Transaction: ${this.transactionHash}
+                From: ${this.sender} 
+                To: ${this.recipient}
+                Value: ${this.amount}
                 Timestamp: ${this.timestamp}`;
     }
 }
