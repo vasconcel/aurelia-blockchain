@@ -37,7 +37,7 @@ class Blockchain {
             this.addBlock(newBlock);
             return newBlock;
         } catch (err) {
-            console.error("Erro de mineração:", err);
+            console.error("Mining error:", err);
             return null;
         }
     }
