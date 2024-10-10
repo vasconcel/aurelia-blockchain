@@ -76,7 +76,7 @@ class Blockchain {
 
         // Algoritmo de Proof-of-Work.
         while (!this.isValidHashDifficulty(nextHash)) {
-            nonce = nonce + 1;
+            nonce += 1;
             timestamp = new Date().getTime();
             nextHash = this.calculateHash(
                 nextIndex,
