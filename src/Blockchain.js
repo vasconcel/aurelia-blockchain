@@ -88,7 +88,7 @@ class Blockchain {
         }
 
         // Criação do novo bloco.
-        const nextBlock = new Block(
+        return new Block(
             nextIndex,
             previousHash,
             timestamp,
@@ -96,8 +96,6 @@ class Blockchain {
             nextHash,
             nonce
         );
-
-        return nextBlock;
     }
 
     // Método para adicionar novos blocos à blockchain.
