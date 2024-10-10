@@ -13,6 +13,7 @@ class Transaction {
 
     // Método para calcular o hash da transação.
     calculateHash() {
+        const stringifiedTransactions = JSON.stringify(transactions);
         return crypto
             .createHash('sha256')
             .update(this.sender + this.recipient + this.amount + this.timestamp)

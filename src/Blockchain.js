@@ -1,5 +1,6 @@
 // Importações.
 const Block = require("./Block.js");
+const Transaction = require("./Transaction.js");
 const crypto = require("crypto");
 
 // Classe Blockchain.
@@ -38,16 +39,17 @@ class Blockchain {
     }
 
     // Função para gerar um hash SHA256.
-    calculateHash(index, previousHash, timestamp, data, nonce) {
+    calculateHash(index, previousHash, timestamp, transactions, nonce) {
+        const stringifiedTransactions = JSON.stringify(transactions);
         return crypto
             .createHash("sha256")
-            .update(index + previousHash + timestamp + data + nonce)
+            .update(index + previousHash + timestamp + stringifiedTransactions + nonce)
             .digest("hex");
     }
 
     // Método para minerar um novo bloco.
-    mine(data) {
-        const nextBlock = this.generateNextBlock(data);
+    mine(transactions) {
+        const nextBlock = this.generateNextBlock(transactions);
         try {
             this.addBlock(nextBlock);
         } catch (err) {
@@ -56,7 +58,7 @@ class Blockchain {
     }
 
     // Método para gerar o próximo bloco.
-    generateNextBlock(data) {
+    generateNextBlock(transactions) {
         // Preparação dos dados.
         const nextIndex = this.latestBlock.index + 1;
         const previousHash = this.latestBlock.hash;
@@ -66,7 +68,7 @@ class Blockchain {
             nextIndex,
             previousHash,
             timestamp,
-            data,
+            transactions,
             nonce
         );
 
@@ -78,7 +80,7 @@ class Blockchain {
                 nextIndex,
                 previousHash,
                 timestamp,
-                data,
+                transactions,
                 nonce
             );
         }
@@ -88,7 +90,7 @@ class Blockchain {
             nextIndex,
             previousHash,
             timestamp,
-            data,
+            transactions,
             nextHash,
             nonce
         );
