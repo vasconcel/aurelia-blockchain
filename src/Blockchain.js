@@ -106,7 +106,7 @@ class Blockchain {
             this.blockchain.push(nextBlock);
         } else {
             const invalidReason = this.getInvalidReason(nextBlock, this.latestBlock);
-            const err = new Error("Bloco inválido: ${invalidReason");
+            const err = new Error("Bloco inválido: ${invalidReason}");
             console.error(err);
             throw err;
         }
