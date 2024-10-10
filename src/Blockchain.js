@@ -100,14 +100,12 @@ class Blockchain {
 
     // Método para adicionar novos blocos à blockchain.
     addBlock(nextBlock) {
-        const invalidReason = this.isValidNextBlock(nextBlock, this.latestBlock);
-        if (invalidReason === true) {
+        const validation = this.isValidNextBlock(nextBlock, this.latestBlock);
+        if (validation === true) {
             this.blockchain.push(nextBlock);
             return true;
         } else {
-            const err = new Error(`Bloco inválido: ${invalidReason}`);
-            console.error(err);
-            throw err;
+            throw new Error(`Invalid block: ${validation}`);
         }
     }
 
