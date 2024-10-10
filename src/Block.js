@@ -3,10 +3,10 @@ const crypto = require("crypto");
 
 // Função utilitária para calcular o hash.
 function calculateBlockHash(index, previousHash, timestamp, transactions, nonce) {
-    const stringifiedDAta = JSON.stringify({ index, previousHash, timestamp, transactions, nonce });
+    const data = JSON.stringify({ index, previousHash, timestamp, transactions, nonce });
     return crypto
         .createHash("sha256")
-        .update(stringifiedData)
+        .update(data)
         .digest("hex");
 }
 
