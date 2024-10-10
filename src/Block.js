@@ -30,7 +30,7 @@ class Block {
             genesisBlock.timestamp,
             genesisBlock.transactions,
             genesisBlock.nonce
-        )
+        );
         return genesisBlock;
     }
 }
