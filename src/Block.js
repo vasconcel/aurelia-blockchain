@@ -1,3 +1,4 @@
+// Classe Block.
 class Block {
     constructor(index, previousHash, timestamp, data, hash, nonce) {
         this.index = index;
@@ -8,6 +9,7 @@ class Block {
         this.nonce = nonce;
     }
 
+    // Método estático de retorno do bloco gênesis.
     static get genesis(){
         return new Block(
             0,
@@ -19,3 +21,5 @@ class Block {
         );
     }
 }
+
+module.exports = Block;
