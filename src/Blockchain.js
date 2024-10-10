@@ -27,22 +27,7 @@ class Blockchain {
     // Função para calcular o hash de um bloco.
     calculateHashForBlock(block) {
         const { index, previousHash, timestamp, transactions, nonce } = block;
-        return this.calculateHash(
-            index,
-            previousHash,
-            timestamp,
-            transactions,
-            nonce
-        );
-    }
-
-    // Função para gerar um hash SHA256.
-    calculateHash(index, previousHash, timestamp, transactions, nonce) {
-        const data = JSON.stringify({ index, previousHash, timestamp, transactions, nonce });
-        return crypto
-            .createHash("sha256")
-            .update(data)
-            .digest("hex");
+        return calculateBlockHash(block);
     }
 
     // Método para minerar um novo bloco.
