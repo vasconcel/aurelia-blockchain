@@ -102,35 +102,24 @@ class Blockchain {
 
     // Método para adicionar novos blocos à blockchain.
     addBlock(nextBlock) {
-        if (this.isValidNextBlock(nextBlock, this.latestBlock)) {
+        const invalidReason = this.isValidNextBlock(nextBlock, this.latestBlock);
+        if (invalidReason === true) {
             this.blockchain.push(nextBlock);
         } else {
-            const invalidReason = this.getInvalidReason(nextBlock, this.latestBlock);
-            const err = new Error("Bloco inválido: ${invalidReason}");
+            const err = new Error(`Bloco inválido: ${invalidReason}`);
             console.error(err);
             throw err;
         }
-    }
-
-    getInvalidReason(nextBlock, previousBlock) {
-        const nextBlockHash = this.calculateHashForBlock(nextBlock);
-
-        if (previousBlock.index + 1 !== nextBlock.index) return "Invalid index";
-        if (previousBlock.hash !== nextBlock.previousHash) return "Invalid previous hash";
-        if (nextBlockHash !== nextBlock.hash) return "Invalid block hash";
-        if (!this.isValidHashDifficulty(nextBlockHash)) return "Invalid hash difficulty";
-
-        return "Unknown reason";
     }
 
     // Função para manter a integridade da blockchain.
     isValidNextBlock(nextBlock, previousBlock) {
         const nextBlockHash = this.calculateHashForBlock(nextBlock);
 
-        if (previousBlock.index + 1 !== nextBlock.index) return false;
-        if (previousBlock.hash !== nextBlock.previousHash) return false;
-        if (nextBlockHash !== nextBlock.hash) return false;
-        if (!this.isValidHashDifficulty(nextBlockHash)) return false;
+        if (previousBlock.index + 1 !== nextBlock.index) return "Invalid index";
+        if (previousBlock.hash !== nextBlock.previousHash) return "Invalid previous hash";
+        if (nextBlockHash !== nextBlock.hash) return "Invalid block hash";
+        if (!this.isValidHashDifficulty(nextBlockHash)) return "Invalid hash difficulty";
 
         return true;
     }
