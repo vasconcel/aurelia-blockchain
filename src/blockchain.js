@@ -26,13 +26,7 @@ class Blockchain {
 
     // Função para calcular o hash de um bloco.
     calculateHashForBlock(block) {
-        const {
-            index,
-            previousHash,
-            timestamp,
-            transactions,
-            nonce
-        } = block;
+        const { index, previousHash, timestamp, transactions, nonce } = block;
 
         return this.calculateHash(
             index,
