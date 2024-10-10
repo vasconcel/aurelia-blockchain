@@ -49,12 +49,14 @@ class Blockchain {
 
     // Método para minerar um novo bloco.
     mine(transactions) {
-        const nextBlock = this.generateNextBlock(transactions);
         try {
-            this.addBlock(nextBlock);
+            const newBlock = this.generateNextBlock(transactions);
+            this.addBlock(newBlock);
+            return newBlock;
         } catch (err) {
-          throw err;  
-        };
+            console.error("Erro de mineração:", err);
+            return null;
+        }
     }
 
     // Método para gerar o próximo bloco.
