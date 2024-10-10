@@ -44,7 +44,6 @@ Este projeto é uma demonstração de uma blockchain simples chamada Aurelia, de
 **Observações:**
 
 * Este projeto é apenas uma demonstração educacional e não se destina ao uso em produção.
-* A moeda "Éfira", será mencionada no código, é fictícia e neste momento não deve possuir valor real.
 
 ## Licença
 
