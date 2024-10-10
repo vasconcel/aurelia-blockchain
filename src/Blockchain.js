@@ -11,7 +11,7 @@ class Blockchain {
     }
 
     // Método para retornar a blockchain.
-    get() {
+    getBlockchain() {
         return this.blockchain;
     }
 
@@ -40,10 +40,10 @@ class Blockchain {
 
     // Função para gerar um hash SHA256.
     calculateHash(index, previousHash, timestamp, transactions, nonce) {
-        const stringifiedTransactions = JSON.stringify(transactions);
+        const data = JSON.stringify({ index, previousHash, timestamp, transactions, nonce });
         return crypto
             .createHash("sha256")
-            .update(index + previousHash + timestamp + stringifiedTransactions + nonce)
+            .update(data)
             .digest("hex");
     }
 
@@ -105,6 +105,7 @@ class Blockchain {
         const invalidReason = this.isValidNextBlock(nextBlock, this.latestBlock);
         if (invalidReason === true) {
             this.blockchain.push(nextBlock);
+            return true;
         } else {
             const err = new Error(`Bloco inválido: ${invalidReason}`);
             console.error(err);
