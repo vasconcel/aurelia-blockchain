@@ -103,7 +103,9 @@ class Blockchain {
         if (this.isValidNextBlock(nextBlock, this.latestBlock)) {
             this.blockchain.push(nextBlock);
         } else {
-          throw "Error: Invalid block";  
+          const err = new Error("Invalid block");
+          console.error(err);
+          throw err;
         }
     }
 
