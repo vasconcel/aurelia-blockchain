@@ -113,17 +113,12 @@ class Blockchain {
     isValidNextBlock(nextBlock, previousBlock) {
         const nextBlockHash = this.calculateHashForBlock(nextBlock);
 
-        if (previousBlock.index + 1 !== nextBlock.index) {
-            return false;
-        } else if (previousBlock.hash !== nextBlock.previousHash) {
-            return false;
-        } else if (nextBlockHash !== nextBlock.hash) {
-            return false;
-        } else if (!this.isValidHashDifficulty(nextBlockHash)) {
-            return false;
-        } else {
-            return true;
-        }
+        if (previousBlock.index + 1 !== nextBlock.index) return false;
+        if (previousBlock.hash !== nextBlock.previousHash) return false;
+        if (nextBlockHash !== nextBlock.hash) return false;
+        if (!this.isValidHashDifficulty(nextBlockHash)) return false;
+
+        return true;
     }
 };
 
