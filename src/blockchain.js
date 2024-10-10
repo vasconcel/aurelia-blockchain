@@ -21,12 +21,7 @@ class Blockchain {
 
     // Método para verificar a validade da dificuldade do hash.
     isValidHashDifficulty(hash) {
-        for (var i = 0; i < hash.length; i++) {
-            if (hash[i] !== "0") {
-                break;
-            };
-        }
-        return i >= this.difficulty;
+        return hash.startsWith("0".repeat(this.difficulty));
     }
 
     // Função para calcular o hash de um bloco.
@@ -120,7 +115,7 @@ class Blockchain {
     isValidNextBlock(nextBlock, previousBlock) {
         const nextBlockHash = this.calculateHashForBlock(nextBlock);
 
-        if (previousBlock.index + 1 !== nextBlock.previousHash) {
+        if (previousBlock.index + 1 !== nextBlock.index) {
             return false;
         } else if (previousBlock.hash !== nextBlock.previousHash) {
             return false;
