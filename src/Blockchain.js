@@ -105,10 +105,22 @@ class Blockchain {
         if (this.isValidNextBlock(nextBlock, this.latestBlock)) {
             this.blockchain.push(nextBlock);
         } else {
-          const err = new Error("Invalid block");
-          console.error(err);
-          throw err;
+            const invalidReason = this.getInvalidReason(nextBlock, this.latestBlock);
+            const err = new Error("Bloco inválido: ${invalidReason");
+            console.error(err);
+            throw err;
         }
+    }
+
+    getInvalidReason(nextBlock, previousBlock) {
+        const nextBlockHash = this.calculateHashForBlock(nextBlock);
+
+        if (previousBlock.index + 1 !== nextBlock.index) return "Invalid index";
+        if (previousBlock.hash !== nextBlock.previousHash) return "Invalid previous hash";
+        if (nextBlockHash !== nextBlock.hash) return "Invalid block hash";
+        if (!this.isValidHashDifficulty(nextBlockHash)) return "Invalid hash difficulty";
+
+        return "Unknown reason";
     }
 
     // Função para manter a integridade da blockchain.
