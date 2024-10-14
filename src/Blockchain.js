@@ -6,7 +6,7 @@ const Transaction = require("./Transaction.js");
 class Blockchain {
     constructor() {
         this.blockchain = [Block.genesis];
-        this.difficulty = 4;
+        this.difficulty = 5;
     }
 
     // Método para retornar a blockchain.
@@ -16,7 +16,7 @@ class Blockchain {
 
     // Método para retornar o último bloco da blockchain.
     get latestBlock() {
-        return this.blockchain[this.blockchain.length -1];
+        return this.blockchain[this.blockchain.length - 1];
     }
 
     // Método para verificar a validade da dificuldade do hash.
@@ -29,16 +29,14 @@ class Blockchain {
         return hashBlockData(block);
     }
 
-    // Método para minerar um novo bloco.
-    mine(transactions) {
+    // Método para minerar um novo bloco com animação de loading.
+    async mine(transactions) {
         console.log("Initiating mining...");
         try {
-            console.log("Generating next block...");
-            const newBlock = this.generateNextBlock(transactions);
-            console.log("New block generated:", newBlock);
-            console.log("Adding new block...");
+            const newBlock = await this.generateNextBlock(transactions);
+            console.log("\nNew block generated:", newBlock);
             this.addBlock(newBlock);
-            console.log("Block added");
+            console.log("Block added!");
             return newBlock;
         } catch (err) {
             console.error("Mining error:", err);
@@ -46,7 +44,7 @@ class Blockchain {
         }
     }
 
-    // Método para gerar o próximo bloco.
+    // Método para gerar o próximo bloco com animação de loading.
     generateNextBlock(transactions) {
         const nextIndex = this.latestBlock.index + 1;
         const previousHash = this.latestBlock.hash;
@@ -60,33 +58,42 @@ class Blockchain {
             nonce: nonce,
         });
 
+        const loadingSymbols = ['.', '..', '...', '....'];
+        let loadingIndex = 0;
+
         // Algoritmo de Proof-of-Work.
-        while (!this.isValidHashDifficulty(nextHash)) {
-            nonce += 1;
-            timestamp = new Date().getTime();
-            nextHash = hashBlockData({
-                index: nextIndex,
-                previousHash,
-                timestamp,
-                transactions,
-                nonce,
-            });
+        return new Promise((resolve) => {
+            // Função para exibir a animação de "loading".
+            const interval = setInterval(() => {
+                // Limpa a linha anterior antes de escrever o novo estado.
+                process.stdout.write(`\rMining${loadingSymbols[loadingIndex]}   `);
+                loadingIndex = (loadingIndex + 1) % loadingSymbols.length;  // Reinicia o índice após o último símbolo.
+            }, 500);
 
-            // Log para exibição dos hashes gerados.
-            if (nonce % 1000 === 0) {
-                console.log(`Nonce: ${nonce}, Hash: ${nextHash}`);
-            }
-        }
+            const mineBlock = () => {
+                if (this.isValidHashDifficulty(nextHash)) {
+                    clearInterval(interval);  // Para a animação.
+                    process.stdout.write("\rMining completed!        \n"); // Limpa a linha de loading
+                    resolve(new Block(nextIndex, previousHash, timestamp, transactions, nextHash, nonce));
+                } else {
+                    nonce += 1;
+                    timestamp = new Date().getTime();
+                    nextHash = hashBlockData({
+                        index: nextIndex,
+                        previousHash,
+                        timestamp,
+                        transactions,
+                        nonce,
+                    });
 
-        // Criação do novo bloco.
-        return new Block(
-            nextIndex,
-            previousHash,
-            timestamp,
-            transactions,
-            nextHash,
-            nonce
-        );
+                    // Usando `setImmediate` para garantir que o event loop não seja bloqueado.
+                    setImmediate(mineBlock);
+                }
+            };
+
+            // Iniciar o processo de mineração.
+            setImmediate(mineBlock);
+        });
     }
 
     // Método para adicionar novos blocos à blockchain.
@@ -109,6 +116,6 @@ class Blockchain {
         if (!this.isValidHashDifficulty(nextBlockHash)) return "Invalid hash difficulty";
         return true;
     }
-};
+}
 
 module.exports = Blockchain;

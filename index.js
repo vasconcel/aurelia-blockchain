@@ -29,7 +29,7 @@ function inputTransaction() {
                         console.log("Starting mining...");
                         myBlockchain.mine(transactionList.getTransactions());
 
-                        console.log("CUrrent Blockchain:", JSON.stringify(myBlockchain.getBlockchain(), null, 2));
+                        console.log("Current Blockchain:", JSON.stringify(myBlockchain.getBlockchain(), null, 2));
                         rl.close();
                     }
                 });
