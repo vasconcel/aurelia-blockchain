@@ -1,4 +1,3 @@
-// src/Transaction.js
 const crypto = require('crypto');
 
 class Transaction {
@@ -6,7 +5,7 @@ class Transaction {
         this.sender = sender;
         this.recipient = recipient;
         this.amount = amount;
-        this.timestamp = Date.now(); // Usa Date.now() para consistência
+        this.timestamp = Date.now();
         this.transactionHash = this.calculateHash();
     }
 

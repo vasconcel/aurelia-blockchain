@@ -5,12 +5,11 @@ function hashBlockData(block) {
 
     const transactionHashes = transactions.map(tx => tx.transactionHash);
 
-
     const data = JSON.stringify({
         index,
         previousHash,
         timestamp,
-        transactionHashes, // Array de hashes das transações
+        transactionHashes,
         nonce
     });
 
@@ -34,6 +33,5 @@ class Block {
         return genesisBlock;
     }
 }
-
 
 module.exports = { Block, hashBlockData };

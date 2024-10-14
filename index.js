@@ -1,6 +1,7 @@
 const readline = require("readline");
 const Blockchain = require("./src/Blockchain.js");
 const { Transaction, TransactionList } = require("./src/Transaction.js");
+const { hashBlockData } = require("./src/Block.js");
 
 const myBlockchain = new Blockchain();
 const transactionList = new TransactionList();
@@ -46,8 +47,13 @@ function handleChoice(choice) {
 
 function inputTransaction() {
     rl.question("Enter the sender's name: ", (sender) => {
-        rl.question("Enter the recipient' name: ", (recipient) => {
+        rl.question("Enter the recipient's name: ", (recipient) => {
             rl.question("Enter the amount of Éfira to transfer: ", (amount) => {
+                if (isNaN(amount) || parseFloat(amount) <= 0) {
+                    console.log("Please enter a valid amount.");
+                    return inputTransaction();
+                }
+
                 const transaction = new Transaction(sender, recipient, parseFloat(amount));
                 transactionList.addTransaction(transaction);
                 console.log(`Transaction added: ${transaction.displayTransaction()}\n`);
@@ -67,31 +73,29 @@ function mineBlock() {
     myBlockchain.mine(transactionList.getTransactions())
         .then(() => {
             console.log("Mining complete!\n");
-            transactionList.clearTransactions(); // Limpa as transações após a mineração
+            transactionList.clearTransactions();
             displayMenu();
         })
         .catch(error => {
             console.error("Mining error:", error);
-            displayMenu(); // Retorna ao menu em caso de erro
+            displayMenu();
         });
 }
 
 function viewBlockchain() {
-     const blockchain = myBlockchain.getBlockchain();
+    const blockchain = myBlockchain.getBlockchain();
     blockchain.forEach(block => {
         const recalculatedHash = hashBlockData(block);
         if (recalculatedHash !== block.hash) {
             console.error(`Block ${block.index}: Hash mismatch! Stored: ${block.hash}, Recalculated: ${recalculatedHash}`);
         }
-     });
-     console.log("\nCurrent Blockchain:\n", JSON.stringify(blockchain, null, 2));
-     displayMenu();
-
+    });
+    console.log("\nCurrent Blockchain:\n", JSON.stringify(blockchain, null, 2));
+    displayMenu();
 }
 
-
 function exitAurelia() {
-    console.log("\nExiting Aurelia Network. Goodbye!\n");
+    console.log("\nExiting Aurelia Network...\n");
     rl.close();
 }
 
