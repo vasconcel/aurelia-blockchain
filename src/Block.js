@@ -25,7 +25,8 @@ class Block {
 
     // Método estático de retorno do bloco gênesis.
     static get genesis() {
-        const genesisBlock = new Block(0, "0", 1678886400000, [], null, 0);
+        const genesisTransactions = [];
+        const genesisBlock = new Block(0, "0", 1678886400000, genesisTransactions, null, 0);
         genesisBlock.hash = hashBlockData(genesisBlock);
         return genesisBlock;
     }
