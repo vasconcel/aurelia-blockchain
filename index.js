@@ -1,56 +1,98 @@
-// index.js
 const readline = require("readline");
 const Blockchain = require("./src/Blockchain.js");
 const { Transaction, TransactionList } = require("./src/Transaction.js");
 
-// Estilização para o console
-const chalk = require('chalk'); // Importe o chalk
-
-// Nome da Rede
-const networkName = "Aurelia Network";
-
-// Instanciando uma nova blockchain.
 const myBlockchain = new Blockchain();
 const transactionList = new TransactionList();
 
-// Configurando o readline para capturar entradas do console.
 const rl = readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
 });
 
-// Função para exibir o cabeçalho da rede
-function displayHeader() {
-    console.log(chalk.blue(`\n=== ${networkName} ===\n`));
+console.log("\nWelcome to the Aurelia Network!\n");
+
+function displayMenu() {
+    console.log("\nChoose an action:");
+    console.log("1. Add transaction");
+    console.log("2. Mine block");
+    console.log("3. View blockchain");
+    console.log("4. Exit");
+    rl.question("Enter your choice: ", (choice) => {
+        handleChoice(choice);
+    });
 }
 
+function handleChoice(choice) {
+    switch (choice) {
+        case "1":
+            inputTransaction();
+            break;
+        case "2":
+            mineBlock();
+            break;
+        case "3":
+            viewBlockchain();
+            break;
+        case "4":
+            exitAurelia();
+            break;
+        default:
+            console.log("Invalid choice. Please try again.");
+            displayMenu();
+            break;
+    }
+}
 
-// Função para capturar transações do console.
 function inputTransaction() {
-    displayHeader(); // Exibe o cabeçalho
-
-    rl.question(chalk.yellow("Enter the sender's name: "), (sender) => {
-        rl.question(chalk.yellow("Enter the recipient' name: "), (recipient) => {
-            rl.question(chalk.yellow("Enter the amount of Éfira to transfer: "), (amount) => {
+    rl.question("Enter the sender's name: ", (sender) => {
+        rl.question("Enter the recipient' name: ", (recipient) => {
+            rl.question("Enter the amount of Éfira to transfer: ", (amount) => {
                 const transaction = new Transaction(sender, recipient, parseFloat(amount));
                 transactionList.addTransaction(transaction);
-                console.log(chalk.green(`Transaction added: ${transaction.displayTransaction()}`));
-
-                rl.question(chalk.yellow("Do you want to add another transaction? (y/n): "), (answer) => {
-                    if (answer.toLowerCase() === 'y') {
-                        inputTransaction();
-                    } else {
-                        console.log(chalk.cyan("\nStarting mining...\n"));
-                        myBlockchain.mine(transactionList.getTransactions())
-                            .then(() => { // Adicione um then para lidar com a promessa resolvida
-                                console.log(chalk.green("Current Blockchain:"), JSON.stringify(myBlockchain.getBlockchain(), null, 2));
-                                rl.close();
-                            });
-                    }
-                });
+                console.log(`Transaction added: ${transaction.displayTransaction()}\n`);
+                displayMenu();
             });
         });
     });
 }
 
-inputTransaction();
+function mineBlock() {
+    if (transactionList.getTransactions().length === 0) {
+        console.log("\nNo transactions to mine. Please add some transactions first.\n");
+        displayMenu();
+        return;
+    }
+
+    myBlockchain.mine(transactionList.getTransactions())
+        .then(() => {
+            console.log("Mining complete!\n");
+            transactionList.clearTransactions(); // Limpa as transações após a mineração
+            displayMenu();
+        })
+        .catch(error => {
+            console.error("Mining error:", error);
+            displayMenu(); // Retorna ao menu em caso de erro
+        });
+}
+
+function viewBlockchain() {
+     const blockchain = myBlockchain.getBlockchain();
+    blockchain.forEach(block => {
+        const recalculatedHash = hashBlockData(block);
+        if (recalculatedHash !== block.hash) {
+            console.error(`Block ${block.index}: Hash mismatch! Stored: ${block.hash}, Recalculated: ${recalculatedHash}`);
+        }
+     });
+     console.log("\nCurrent Blockchain:\n", JSON.stringify(blockchain, null, 2));
+     displayMenu();
+
+}
+
+
+function exitAurelia() {
+    console.log("\nExiting Aurelia Network. Goodbye!\n");
+    rl.close();
+}
+
+displayMenu();

@@ -1,120 +1,138 @@
-// Importações.
+// src/Blockchain.js
 const { Block, hashBlockData } = require("./Block.js");
-const Transaction = require("./Transaction.js");
+const { Transaction } = require("./Transaction.js");
 
-// Classe Blockchain.
+
 class Blockchain {
     constructor() {
         this.blockchain = [Block.genesis];
-        this.difficulty = 5;
+        this.difficulty = 5; // Ajuste a dificuldade conforme necessário
+        this.blockReward = 50;
+        this.halvingInterval = 210000;
     }
 
-    // Método para retornar a blockchain.
     getBlockchain() {
         return this.blockchain;
     }
 
-    // Método para retornar o último bloco da blockchain.
     get latestBlock() {
         return this.blockchain[this.blockchain.length - 1];
     }
 
-    // Método para verificar a validade da dificuldade do hash.
     isValidHashDifficulty(hash) {
         return hash.startsWith("0".repeat(this.difficulty));
     }
 
-    // Função para calcular o hash de um bloco.
-    computeBlockHash(block) {
-        return hashBlockData(block);
-    }
 
-    // Método para minerar um novo bloco com animação de loading.
+
     async mine(transactions) {
+
+        console.log("Mining Block...");
+
         try {
+
             const newBlock = await this.generateNextBlock(transactions);
-            console.log("\nNew block generated:", newBlock);
+
+
             this.addBlock(newBlock);
-            console.log("Block added!");
-            return newBlock;
-        } catch (err) {
-            console.error("Mining error:", err);
-            return null;
+
+            console.log("\nBlock mined:", newBlock);
+
+
+        } catch (error) {
+
+            console.log("Mining error:", error);
+
         }
+
     }
 
-    // Método para gerar o próximo bloco com animação de loading.
+
     generateNextBlock(transactions) {
         const nextIndex = this.latestBlock.index + 1;
         const previousHash = this.latestBlock.hash;
-        let timestamp = new Date().getTime();
+        let timestamp = Date.now();
         let nonce = 0;
-        let nextHash = hashBlockData({
+
+
+        const createHash = () => hashBlockData({
             index: nextIndex,
-            previousHash: previousHash,
-            timestamp: timestamp,
-            transactions: transactions,
-            nonce: nonce,
-        });
+            previousHash,
+            timestamp,
+            transactions,
+            nonce
+        })
 
-        const loadingSymbols = ['.', '..', '...', '....'];
-        let loadingIndex = 0;
+        let nextHash = createHash()
 
-        // Algoritmo de Proof-of-Work.
         return new Promise((resolve) => {
-            // Função para exibir a animação de "loading".
-            const interval = setInterval(() => {
-                // Limpa a linha anterior antes de escrever o novo estado.
-                process.stdout.write(`\r${loadingSymbols[loadingIndex]}   `);
-                loadingIndex = (loadingIndex + 1) % loadingSymbols.length;  // Reinicia o índice após o último símbolo.
-            }, 500);
+            while (!this.isValidHashDifficulty(nextHash)) {
 
-            const mineBlock = () => {
-                if (this.isValidHashDifficulty(nextHash)) {
-                    clearInterval(interval);  // Para a animação.
-                    process.stdout.write("\rMining completed!        \n"); // Limpa a linha de loading
-                    resolve(new Block(nextIndex, previousHash, timestamp, transactions, nextHash, nonce));
-                } else {
-                    nonce += 1;
-                    timestamp = new Date().getTime();
-                    nextHash = hashBlockData({
-                        index: nextIndex,
-                        previousHash,
-                        timestamp,
-                        transactions,
-                        nonce,
-                    });
+                nonce++;
+                timestamp = Date.now();
+                nextHash = createHash()
 
-                    // Usando `setImmediate` para garantir que o event loop não seja bloqueado.
-                    setImmediate(mineBlock);
-                }
-            };
+            }
 
-            // Iniciar o processo de mineração.
-            setImmediate(mineBlock);
+            const minerRewardTransaction = new Transaction(
+                "Aurelia Network",
+                "Miner Address",
+                this.blockReward
+            );
+
+
+            transactions.push(minerRewardTransaction);
+
+
+            const newBlock = new Block(nextIndex, previousHash, timestamp, transactions, nextHash, nonce);
+
+
+            if (nextIndex % this.halvingInterval === 0) {
+                this.blockReward /= 2;
+                console.log(`\nBlock reward halved! New reward: ${this.blockReward} Éfira\n`);
+            }
+
+
+            resolve(newBlock);
         });
     }
 
-    // Método para adicionar novos blocos à blockchain.
-    addBlock(nextBlock) {
-        const validation = this.isValidNextBlock(nextBlock, this.latestBlock);
-        if (validation === true) {
-            this.blockchain.push(nextBlock);
-            return true;
+
+    addBlock(newBlock) {
+        if (this.isValidNextBlock(newBlock, this.latestBlock)) {
+            this.blockchain.push(newBlock);
         } else {
-            throw new Error(`Invalid block: ${validation}`);
+            console.error("Invalid block:", this.isValidNextBlock(newBlock, this.latestBlock))
         }
     }
 
-    // Função para manter a integridade da blockchain.
     isValidNextBlock(nextBlock, previousBlock) {
-        const nextBlockHash = this.computeBlockHash(nextBlock);
-        if (previousBlock.index + 1 !== nextBlock.index) return "Invalid index";
-        if (previousBlock.hash !== nextBlock.previousHash) return "Invalid previous hash";
-        if (nextBlockHash !== nextBlock.hash) return "Invalid block hash";
-        if (!this.isValidHashDifficulty(nextBlockHash)) return "Invalid hash difficulty";
+
+        const nextBlockHash = hashBlockData(nextBlock);
+
+
+
+
+        if (previousBlock.index + 1 !== nextBlock.index) {
+            return "Invalid index";
+        } else if (previousBlock.hash !== nextBlock.previousHash) {
+            return "Invalid previous hash";
+        } else if (nextBlockHash !== nextBlock.hash) {
+            return "Invalid block hash";
+        } else if (!this.isValidHashDifficulty(nextBlockHash)) {
+
+            return "Invalid hash difficulty";
+        }
+
         return true;
+
     }
+
+
 }
+
+
+
+
 
 module.exports = Blockchain;

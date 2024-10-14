@@ -1,18 +1,22 @@
-// Importações.
 const crypto = require("crypto");
 
-// Função utilitária para calcular o hash.
 function hashBlockData(block) {
     const { index, previousHash, timestamp, transactions, nonce } = block;
-    const transactionHashes = transactions.map( tx => tx.transactionHash);
-    const data = JSON.stringify({ index, previousHash, timestamp, transactions, nonce });
-    return crypto
-        .createHash("sha256")
-        .update(data)
-        .digest("hex");
+
+    const transactionHashes = transactions.map(tx => tx.transactionHash);
+
+
+    const data = JSON.stringify({
+        index,
+        previousHash,
+        timestamp,
+        transactionHashes, // Array de hashes das transações
+        nonce
+    });
+
+    return crypto.createHash("sha256").update(data).digest("hex");
 }
 
-// Classe Block.
 class Block {
     constructor(index, previousHash, timestamp, transactions, hash, nonce) {
         this.index = index;
@@ -23,7 +27,6 @@ class Block {
         this.nonce = nonce;
     }
 
-    // Método estático de retorno do bloco gênesis.
     static get genesis() {
         const genesisTransactions = [];
         const genesisBlock = new Block(0, "0", 1678886400000, genesisTransactions, null, 0);
@@ -31,5 +34,6 @@ class Block {
         return genesisBlock;
     }
 }
+
 
 module.exports = { Block, hashBlockData };
