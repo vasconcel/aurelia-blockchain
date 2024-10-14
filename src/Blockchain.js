@@ -22,8 +22,6 @@ class Blockchain {
     }
 
     async mine(transactions) {
-        console.log("Mining Block...");
-
         try {
             const newBlock = await this.generateNextBlock(transactions);
             this.addBlock(newBlock);
