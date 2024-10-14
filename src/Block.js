@@ -4,6 +4,9 @@ const crypto = require("crypto");
 // Função utilitária para calcular o hash.
 function hashBlockData(block) {
     const { index, previousHash, timestamp, transactions, nonce } = block;
+    
+    const transactionHashes = transactions.map( tx => tx.transactionHash);
+
     const data = JSON.stringify({ index, previousHash, timestamp, transactions, nonce });
     return crypto
         .createHash("sha256")

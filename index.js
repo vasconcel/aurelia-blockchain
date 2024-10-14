@@ -1,29 +1,41 @@
 // Importações.
+const readline = require("readline");
 const Blockchain = require("./src/Blockchain.js");
-const Transaction = require("./src/Transaction.js");
+const { Transaction, TransactionList } = require("./src/Transaction.js");
 
 // Instanciando uma nova blockchain.
 const myBlockchain = new Blockchain();
+const transactionList = new TransactionList();
 
-// Criando algumas transações.
-const transaction1 = new Transaction("Asterion", "Teseu", 50);
-const transaction2 = new Transaction("Midas", "Dédalo", 25);
-const transaction3 = new Transaction("Édipo", "Antígona", 10);
+// Configurando o readline para capturar entradas do console.
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
-// Exibindo transações.
-console.log("Transaction 1:", transaction1.displayTransaction());
-console.log("Transaction 2:", transaction1.displayTransaction());
-console.log("Transaction 3:", transaction1.displayTransaction());
+// Função para capturar transações do console.
+function inputTransaction() {
+    rl.question("Enter the sender's name: ", (sender) => {
+        rl.question("Enter the recipient' name: ", (recipient) => {
+            rl.question("Enter the amount of Éfira to transfer: ", (amount) => {
+                const transaction = new Transaction(sender, recipient, parseFloat(amount));
+                transactionList.addTransaction(transaction);
+                console.log(`Transaction added: ${transaction.displayTransaction()}`);
 
-// Minerando blocos com as transações.
-console.log("Mining block 1...");
-myBlockchain.mine([transaction1]);
+                rl.question("Do you want to add another transaction? (y/n): ", (answer) => {
+                    if (answer.toLowerCase() === 'y') {
+                        inputTransaction();
+                    } else {
+                        console.log("Starting mining...");
+                        myBlockchain.mine(transactionList.getTransactions());
 
-console.log("Mining block 2...");
-myBlockchain.mine([transaction2]);
+                        console.log("CUrrent Blockchain:", JSON.stringify(myBlockchain.getBlockchain(), null, 2));
+                        rl.close();
+                    }
+                });
+            });
+        });
+    });
+}
 
-console.log("Mining block 3...");
-myBlockchain.mine([transaction3]);
-
-// Exibindo a blockchain.
-console.log("Blockchain atual:", JSON.stringify(myBlockchain.getBlockchain(), null, 2));
+inputTransaction();

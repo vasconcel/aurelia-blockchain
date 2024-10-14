@@ -29,4 +29,18 @@ class Transaction {
     }
 }
 
-module.exports = Transaction;
+class TransactionList {
+    constructor() {
+        this.transactions = [];
+    }
+
+    addTransaction(transaction) {
+        this.transactions.push(transaction);
+    }
+
+    getTransactions() {
+        return this.transactions;
+    }
+}
+
+module.exports = { Transaction, TransactionList };

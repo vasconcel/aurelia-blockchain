@@ -6,7 +6,7 @@ const Transaction = require("./Transaction.js");
 class Blockchain {
     constructor() {
         this.blockchain = [Block.genesis];
-        this.difficulty = 0;
+        this.difficulty = 4;
     }
 
     // Método para retornar a blockchain.
@@ -26,15 +26,19 @@ class Blockchain {
 
     // Função para calcular o hash de um bloco.
     computeBlockHash(block) {
-        const { index, previousHash, timestamp, transactions, nonce } = block;
-        return hashBlockData(index, previousHash, timestamp, transactions, nonce);
+        return hashBlockData(block);
     }
 
     // Método para minerar um novo bloco.
     mine(transactions) {
+        console.log("Initiating mining...");
         try {
+            console.log("Generating next block...");
             const newBlock = this.generateNextBlock(transactions);
+            console.log("New block generated:", newBlock);
+            console.log("Adding new block...");
             this.addBlock(newBlock);
+            console.log("Block added");
             return newBlock;
         } catch (err) {
             console.error("Mining error:", err);
@@ -48,25 +52,30 @@ class Blockchain {
         const previousHash = this.latestBlock.hash;
         let timestamp = new Date().getTime();
         let nonce = 0;
-        let nextHash = hashBlockData(
-            nextIndex,
-            previousHash,
-            timestamp,
-            transactions,
-            nonce
-        );
+        let nextHash = hashBlockData({
+            index: nextIndex,
+            previousHash: previousHash,
+            timestamp: timestamp,
+            transactions: transactions,
+            nonce: nonce,
+        });
 
         // Algoritmo de Proof-of-Work.
         while (!this.isValidHashDifficulty(nextHash)) {
             nonce += 1;
             timestamp = new Date().getTime();
-            nextHash = hashBlockData(
-                nextIndex,
+            nextHash = hashBlockData({
+                index: nextIndex,
                 previousHash,
                 timestamp,
                 transactions,
-                nonce
-            );
+                nonce,
+            });
+
+            // Log para exibição dos hashes gerados.
+            if (nonce % 1000 === 0) {
+                console.log(`Nonce: ${nonce}, Hash: ${nextHash}`);
+            }
         }
 
         // Criação do novo bloco.
