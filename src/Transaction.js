@@ -41,6 +41,10 @@ class TransactionList {
     getTransactions() {
         return this.transactions;
     }
+
+    clearTransactions() {
+        this.transactions = [];
+    }
 }
 
 module.exports = { Transaction, TransactionList };
