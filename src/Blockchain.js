@@ -31,7 +31,6 @@ class Blockchain {
 
     // Método para minerar um novo bloco com animação de loading.
     async mine(transactions) {
-        console.log("Initiating mining...");
         try {
             const newBlock = await this.generateNextBlock(transactions);
             console.log("\nNew block generated:", newBlock);
@@ -66,7 +65,7 @@ class Blockchain {
             // Função para exibir a animação de "loading".
             const interval = setInterval(() => {
                 // Limpa a linha anterior antes de escrever o novo estado.
-                process.stdout.write(`\rMining${loadingSymbols[loadingIndex]}   `);
+                process.stdout.write(`\r${loadingSymbols[loadingIndex]}   `);
                 loadingIndex = (loadingIndex + 1) % loadingSymbols.length;  // Reinicia o índice após o último símbolo.
             }, 500);
 
