@@ -1,4 +1,4 @@
-# Aurelia Demo
+# Aurelia Network
 
 ## Objetivo
 
@@ -10,7 +10,8 @@ Este projeto é uma demonstração de uma blockchain simples chamada Aurelia, de
 * Adição de novos blocos à cadeia.
 * Validação da integridade da blockchain.
 * Cálculo de hashes usando SHA256.
-* Implementação de um Proof-of-Work (dificuldade ajustável).
+* Implementação de um Proof-of-Work com dificuldade ajustável.
+* Mineração de blocos com recompensa ao minerador.
 * Interface de linha de comando para interagir com a blockchain.
 
 **Tecnologias Utilizadas:**
@@ -43,7 +44,7 @@ Este projeto é uma demonstração de uma blockchain simples chamada Aurelia, de
 
 **Observações:**
 
-* Este projeto é apenas uma demonstração educacional e não se destina ao uso em produção.
+* Este projeto é apenas uma demonstração educacional e não se destina ao uso em produção. Ele serve somente para ilustrar os princípios de funcionamento de uma blockchain.
 
 ## Licença
 
