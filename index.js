@@ -1,9 +1,10 @@
 const readline = require("readline");
-const chalk = require("chalk"); // Import chalk for styling
+const chalk = require("chalk");
 const Blockchain = require("./src/Blockchain.js");
 const { Transaction, TransactionList } = require("./src/Transaction.js");
 const { hashBlockData } = require("./src/Block.js");
 
+// Instancia a blockchain e a lista de transações.
 const myBlockchain = new Blockchain();
 const transactionList = new TransactionList();
 
@@ -12,15 +13,16 @@ const rl = readline.createInterface({
     output: process.stdout,
 });
 
-// Ocean-themed colors
+// Paleta de cores oceânicas.
 const aqua = chalk.cyanBright;
 const oceanBlue = chalk.blue;
-const seafoam = chalk.rgb(157, 255, 199)
+const seafoam = chalk.rgb(157, 255, 199);
 const coral = chalk.rgb(255, 127, 80);
 const wave = chalk.rgb(0, 191, 255);
 
 console.log(aqua("\nWelcome to the Aurelia Network!\n"));
 
+// Exibe o menu principal com as opções de interação.
 function displayMenu() {
     console.log(oceanBlue("\nChoose an action:"));
     console.log(`${aqua("1.")} ${seafoam("Add transaction")}`);
@@ -32,6 +34,7 @@ function displayMenu() {
     });
 }
 
+// Lida com a escolha do usuário.
 function handleChoice(choice) {
     switch (choice) {
         case "1":
@@ -47,21 +50,25 @@ function handleChoice(choice) {
             exitAurelia();
             break;
         default:
+            // Tratamento de erros.
             console.log(chalk.red("Invalid choice. Please try again."));
             displayMenu();
             break;
     }
 }
 
+// Captura e adiciona uma nova transação.
 function inputTransaction() {
     rl.question(chalk.cyan("Enter the sender's name: "), (sender) => {
         rl.question(chalk.cyan("Enter the recipient's name: "), (recipient) => {
             rl.question(chalk.cyan("Enter the amount of Éfira to transfer: "), (amount) => {
+                // Verifica se o valor é numérico e maior que zero.
                 if (isNaN(amount) || parseFloat(amount) <= 0) {
                     console.log(chalk.red("Please enter a valid amount."));
-                    return inputTransaction();
+                    return inputTransaction();  // Repete a entrada se o valor for inválido.
                 }
 
+                // Cria e adiciona a transação.
                 const transaction = new Transaction(sender, recipient, parseFloat(amount));
                 transactionList.addTransaction(transaction);
                 console.log(chalk.green(`Transaction added: ${transaction.displayTransaction()}\n`));
@@ -71,7 +78,7 @@ function inputTransaction() {
     });
 }
 
-
+// Minera um bloco com as transações atuais.
 function mineBlock() {
     if (transactionList.getTransactions().length === 0) {
         console.log(chalk.red("\nNo transactions to mine. Please add some transactions first.\n"));
@@ -79,8 +86,9 @@ function mineBlock() {
         return;
     }
 
-    console.log(chalk.yellow("Mining...\n")); // Indicate mining start
+    console.log(chalk.yellow("Mining...\n"));
 
+    // Inicia a mineração e adiciona o bloco à blockchain.
     myBlockchain.mine(transactionList.getTransactions())
         .then(() => {
             console.log(chalk.green("Mining complete!\n"));
@@ -93,22 +101,26 @@ function mineBlock() {
         });
 }
 
+// Exibe a blockchain e verifica a integridade de cada bloco.
 function viewBlockchain() {
     const blockchain = myBlockchain.getBlockchain();
     blockchain.forEach(block => {
+        // Recalcula o hash de cada bloco e verifica sua integridade.
         const recalculatedHash = hashBlockData(block);
         if (recalculatedHash !== block.hash) {
             console.error(chalk.red(`Block ${block.index}: Hash mismatch! Stored: ${block.hash}, Recalculated: ${recalculatedHash}`));
         }
     });
+    // Exibe a blockchain formatada.
     console.log(chalk.yellow("\nCurrent Blockchain:\n"), chalk.gray(JSON.stringify(blockchain, null, 2)));
     displayMenu();
 }
 
-
+// Sai do programa.
 function exitAurelia() {
     console.log(chalk.blueBright("\nExiting Aurelia Network...\n"));
     rl.close();
 }
 
+// Inicia o menu.
 displayMenu();
