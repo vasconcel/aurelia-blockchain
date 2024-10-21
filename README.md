@@ -48,4 +48,4 @@ Este projeto é uma demonstração de uma blockchain simples chamada Aurelia, de
 
 ## Licença
 
-Este repositório está licenciado sob a licença [MIT](https://choosealicense.com/licenses/mit/).
+Este repositório está licenciado sob a licença [ISC](https://opensource.org/license/isc-license-txt).
