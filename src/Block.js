@@ -1,4 +1,4 @@
-const crypto = require("crypto");
+import crypto from "crypto";
 
 // Calcula o hash de um bloco usando SHA256.
 function hashBlockData(block) {
@@ -39,4 +39,4 @@ class Block {
     }
 }
 
-module.exports = { Block, hashBlockData };
+export { Block, hashBlockData };

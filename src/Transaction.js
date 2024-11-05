@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 class Transaction {
     constructor(sender, recipient, amount) {
@@ -46,4 +46,4 @@ class TransactionList {
     }
 }
 
-module.exports = { Transaction, TransactionList };
+export { Transaction, TransactionList };

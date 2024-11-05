@@ -1,29 +1,29 @@
 {
-    "name": "aurelia-demo",
-    "version": "1.0.0",
-    "description": "Demonstração de uma blockchain simples chamada Aurelia.",
-    "main": "index.js",
-    "scripts": {
-      "start": "node index.js",
-      "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/devitruvius/aurelia-demo.git"
-    },
-    "keywords": [
-      "blockchain",
-      "demonstração",
-      "proof-of-work",
-      "sha256",
-      "javascript",
-      "node.js"
-    ],
-    "author": "Gabriel Vasconcelos Andrade da Silva <gabriel.vasconcel@outlook.com>",
-    "license": "ISC",
-    "dependencies": {
-      "chalk": "^5.2.0",
-      "readline": "^1.3.0",
-      "crypto": "^1.0.1"
-    }
+  "name": "aurelia-demo",
+  "version": "1.0.0",
+  "description": "Demonstração de uma blockchain simples chamada Aurelia.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devitruvius/aurelia-demo.git"
+  },
+  "keywords": [
+    "blockchain",
+    "demonstração",
+    "proof-of-work",
+    "sha256",
+    "javascript",
+    "node.js"
+  ],
+  "author": "Gabriel Vasconcelos Andrade da Silva <gabriel.vasconcel@outlook.com>",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.2.0",
+    "readline": "^1.3.0"
   }
+}

@@ -1,8 +1,8 @@
-const readline = require("readline");
-const chalk = require("chalk");
-const Blockchain = require("./src/Blockchain.js");
-const { Transaction, TransactionList } = require("./src/Transaction.js");
-const { hashBlockData } = require("./src/Block.js");
+import readline from "readline";
+import chalk from "chalk";
+import Blockchain from "./src/Blockchain.js";
+import { Transaction, TransactionList } from "./src/Transaction.js";
+import { hashBlockData } from "./src/Block.js";
 
 // Instancia a blockchain e a lista de transações.
 const myBlockchain = new Blockchain();

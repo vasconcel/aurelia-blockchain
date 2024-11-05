@@ -1,5 +1,5 @@
-const { Block, hashBlockData } = require("./Block.js");
-const { Transaction } = require("./Transaction.js");
+import { Block, hashBlockData } from "./Block.js";
+import { Transaction } from "./Transaction.js";
 
 class Blockchain {
     constructor() {
@@ -101,4 +101,4 @@ class Blockchain {
     }
 }
 
-module.exports = Blockchain;
+export default Blockchain;
