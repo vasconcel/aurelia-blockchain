@@ -29,7 +29,7 @@ Este projeto é uma demonstração de uma blockchain simples chamada Aurelia, de
 
 2. **Navegue até o diretório:**
    ```bash
-   cd aurelia-demo
+   cd aurelia-network
    ```
 
 3. **Instale as dependências:**
