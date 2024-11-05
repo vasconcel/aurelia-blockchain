@@ -24,7 +24,7 @@ Este projeto é uma demonstração de uma blockchain simples chamada Aurelia, de
 
 1. **Clone o repositório:**
    ```bash
-   git clone https://github.com/devitruvius/aurelia-demo.git
+   git clone https://github.com/vasconcel/aurelia-network.git
    ```
 
 2. **Navegue até o diretório:**
