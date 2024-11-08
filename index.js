@@ -3,41 +3,44 @@ import chalk from "chalk";
 import Blockchain from "./src/Blockchain.js";
 import { Transaction, TransactionList } from "./src/Transaction.js";
 
-// Instancia a blockchain e a lista de transações.
-const myBlockchain = new Blockchain();
-const transactionList = new TransactionList();
+// Constantes para cores do console
+const COLOR_SCHEME = {
+    primary: chalk.cyanBright,
+    secondary: chalk.blue,
+    success: chalk.green,
+    warning: chalk.yellow,
+    error: chalk.red,
+    info: chalk.rgb(0, 191, 255), // wave
+    light: chalk.rgb(157, 255, 199), // seafoam
+    accent: chalk.rgb(255, 127, 80), // coral
+};
 
+// Interface de leitura de linha
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
 });
 
-// Paleta de cores oceânicas.
-const aqua = chalk.cyanBright;
-const oceanBlue = chalk.blue;
-const seafoam = chalk.rgb(157, 255, 199);
-const coral = chalk.rgb(255, 127, 80);
-const wave = chalk.rgb(0, 191, 255);
+// Instâncias da blockchain e da lista de transações
+const blockchain = new Blockchain();
+const transactionList = new TransactionList();
 
-console.log(aqua("\nWelcome to the Aurelia Network!\n"));
-
-// Exibe o menu principal com as opções de interação.
+// Função principal para exibir o menu
 function displayMenu() {
-    console.log(oceanBlue("\nChoose an action:"));
-    console.log(`${aqua("1.")} ${seafoam("Add transaction")}`);
-    console.log(`${aqua("2.")} ${seafoam("Mine block")}`);
-    console.log(`${aqua("3.")} ${seafoam("View blockchain")}`);
-    console.log(`${aqua("4.")} ${coral("Exit")}`);
-    rl.question(wave("Enter your choice: "), (choice) => {
-        handleChoice(choice);
-    });
+    console.log(COLOR_SCHEME.secondary("\nChoose an action:"));
+    console.log(`${COLOR_SCHEME.primary("1.")} ${COLOR_SCHEME.light("Add transaction")}`);
+    console.log(`${COLOR_SCHEME.primary("2.")} ${COLOR_SCHEME.light("Mine block")}`);
+    console.log(`${COLOR_SCHEME.primary("3.")} ${COLOR_SCHEME.light("View blockchain")}`);
+    console.log(`${COLOR_SCHEME.primary("4.")} ${COLOR_SCHEME.accent("Exit")}`);
+
+    rl.question(COLOR_SCHEME.info("Enter your choice: "), handleChoice);
 }
 
-// Lida com a escolha do usuário.
+// Função para lidar com a escolha do usuário
 function handleChoice(choice) {
     switch (choice) {
         case "1":
-            inputTransaction();
+            addTransaction();
             break;
         case "2":
             mineBlock();
@@ -46,73 +49,70 @@ function handleChoice(choice) {
             viewBlockchain();
             break;
         case "4":
-            exitAurelia();
+            exitApplication();
             break;
         default:
-            // Tratamento de erros.
-            console.log(chalk.red("Invalid choice. Please try again."));
+            console.log(COLOR_SCHEME.error("Invalid choice. Please try again."));
             displayMenu();
-            break;
     }
 }
 
-// Captura e adiciona uma nova transação.
-function inputTransaction() {
-    rl.question(chalk.cyan("Enter the sender's name: "), (sender) => {
-        rl.question(chalk.cyan("Enter the recipient's name: "), (recipient) => {
-            rl.question(chalk.cyan("Enter the amount of Éfira to transfer: "), (amount) => {
-                // Verifica se o valor é numérico e maior que zero.
-                if (isNaN(amount) || parseFloat(amount) <= 0) {
-                    console.log(chalk.red("Please enter a valid amount."));
-                    return inputTransaction();  // Repete a entrada se o valor for inválido.
+// Função para adicionar uma nova transação
+function addTransaction() {
+    rl.question(COLOR_SCHEME.primary("Enter the sender's name: "), (sender) => {
+        rl.question(COLOR_SCHEME.primary("Enter the recipient's name: "), (recipient) => {
+            rl.question(COLOR_SCHEME.primary("Enter the amount of Éfira to transfer: "), (amount) => {
+                const amountValue = parseFloat(amount);
+
+                if (isNaN(amountValue) || amountValue <= 0) {
+                    console.log(COLOR_SCHEME.error("Please enter a valid amount."));
+                    return addTransaction();
                 }
 
-                // Cria e adiciona a transação.
-                const transaction = new Transaction(sender, recipient, parseFloat(amount));
+                const transaction = new Transaction(sender, recipient, amountValue);
                 transactionList.addTransaction(transaction);
-                console.log(chalk.green(`Transaction added: ${transaction.displayTransaction()}\n`));
+                console.log(COLOR_SCHEME.success(`Transaction added: ${transaction.displayTransaction()}\n`));
                 displayMenu();
             });
         });
     });
 }
 
-// Minera um bloco com as transações atuais.
-function mineBlock() {
-    if (transactionList.getTransactions().length === 0) {
-        console.log(chalk.red("\nNo transactions to mine. Please add some transactions first.\n"));
+// Função para minerar um bloco
+async function mineBlock() {
+    const transactions = transactionList.getTransactions();
+
+    if (transactions.length === 0) {
+        console.log(COLOR_SCHEME.error("\nNo transactions to mine. Please add some transactions first.\n"));
         displayMenu();
         return;
     }
 
-    console.log(chalk.yellow("Mining...\n"));
+    console.log(COLOR_SCHEME.warning("Mining...\n"));
 
-    // Inicia a mineração e adiciona o bloco à blockchain.
-    myBlockchain.mine(transactionList.getTransactions())
-        .then(() => {
-            console.log(chalk.green("Mining complete!\n"));
-            transactionList.clearTransactions();
-            displayMenu();
-        })
-        .catch(error => {
-            console.error(chalk.red("Mining error:", error));
-            displayMenu();
-        });
+    try {
+        await blockchain.mine(transactions);
+        console.log(COLOR_SCHEME.success("Mining complete!\n"));
+        transactionList.clearTransactions();
+    } catch (error) {
+        console.error(COLOR_SCHEME.error("Mining error:", error));
+    } finally { // Garante que o menu será exibido mesmo com erros.
+        displayMenu();
+    }
 }
 
-// Exibe a blockchain e verifica a integridade de cada bloco.
+// Função para visualizar a blockchain
 function viewBlockchain() {
-    const blockchain = myBlockchain.getBlockchain();
-
-    console.log(chalk.yellow("Current Blockchain:\n"), chalk.gray(JSON.stringify(blockchain, null, 2)));
-    displayMenu();
+  console.log(COLOR_SCHEME.warning("Current Blockchain:\n"), chalk.gray(JSON.stringify(blockchain.getBlockchain(), null, 2)));
+  displayMenu();
 }
 
-// Sai do programa.
-function exitAurelia() {
-    console.log(chalk.blueBright("\nExiting Aurelia Network...\n"));
+// Função para sair do aplicativo
+function exitApplication() {
+    console.log(COLOR_SCHEME.secondary("\nExiting Aurelia Network...\n"));
     rl.close();
 }
 
-// Inicia o menu.
+// Inicia a aplicação exibindo o menu.
+console.log(COLOR_SCHEME.primary("\nWelcome to the Aurelia Network!\n"));
 displayMenu();
