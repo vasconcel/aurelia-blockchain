@@ -105,11 +105,21 @@ function mineBlock() {
 function viewBlockchain() {
     const blockchain = myBlockchain.getBlockchain();
     blockchain.forEach(block => {
-        // Recalcula o hash de cada bloco e verifica sua integridade.
-        const recalculatedHash = hashBlockData(block);
+        // Cria uma cópia das transações do bloco, *excluindo* a última (recompensa do minerador).
+        const transactionsWithoutReward = block.transactions.slice(0, -1); 
+
+        // Recalcula o hash usando as transações sem a recompensa.
+        const recalculatedHash = hashBlockData({
+            ...block,
+            transactions: transactionsWithoutReward
+        });
+
         if (recalculatedHash !== block.hash) {
             console.error(chalk.red(`Block ${block.index}: Hash mismatch! Stored: ${block.hash}, Recalculated: ${recalculatedHash}`));
+        } else {
+            console.log(chalk.green(`Block ${block.index}: Hash matches!`));
         }
+
     });
     // Exibe a blockchain formatada.
     console.log(chalk.yellow("\nCurrent Blockchain:\n"), chalk.gray(JSON.stringify(blockchain, null, 2)));
