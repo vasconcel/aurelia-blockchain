@@ -1,10 +1,10 @@
-import { Block, hashBlockData } from "./Block.js";
+import { Block, hashBlockData, generateMerkleRoot } from "./Block.js";
 import { Transaction } from "./Transaction.js";
 
 class Blockchain {
     constructor() {
         this.blockchain = [Block.genesis]; // Inicia a blockchain com o bloco gênesis.
-        this.difficulty = 5;              // Dificuldade de mineração (número de zeros no hash).
+        this.difficulty = 4;              // Dificuldade de mineração (número de zeros no hash).
         this.blockReward = 50;            // Recompensa inicial para mineradores.
         this.halvingInterval = 210000;    // Intervalo para reduzir a recompensa pela metade.
     }
@@ -36,12 +36,13 @@ class Blockchain {
         const previousHash = this.latestBlock.hash;
         let timestamp = Date.now();
         let nonce = 0;
+        const merkleRoot = generateMerkleRoot(transactions); // Calcula a Merkle Root
 
         const createHash = () => hashBlockData({
             index: nextIndex,
             previousHash,
             timestamp,
-            transactions,
+            merkleRoot, // Inclui a Merkle Root
             nonce
         });
 
@@ -64,7 +65,7 @@ class Blockchain {
 
             transactions.push(minerRewardTransaction); // Adiciona recompensa ao bloco.
 
-            const newBlock = new Block(nextIndex, previousHash, timestamp, transactions, nextHash, nonce);
+            const newBlock = new Block(nextIndex, previousHash, timestamp, transactions, nextHash, nonce, merkleRoot);
 
             // Aplica halving da recompensa após o intervalo definido.
             if (nextIndex % this.halvingInterval === 0) {
@@ -86,6 +87,7 @@ class Blockchain {
 
     isValidNextBlock(nextBlock, previousBlock) {
         const nextBlockHash = hashBlockData(nextBlock);
+        const recalculatedMerkleRoot = generateMerkleRoot(nextBlock.transactions); // Recalcula a Merkle Root
 
         if (previousBlock.index + 1 !== nextBlock.index) {
             return "Invalid index"; // O índice do próximo bloco deve ser sequencial.
@@ -95,6 +97,8 @@ class Blockchain {
             return "Invalid block hash"; // O hash do bloco deve ser válido.
         } else if (!this.isValidHashDifficulty(nextBlockHash)) {
             return "Invalid hash difficulty"; // A dificuldade do hash deve ser respeitada.
+        } else if (recalculatedMerkleRoot !== nextBlock.merkleRoot) {
+            return "Invalid merkle root"; // Verifica a integridade da Merkle Root
         }
 
         return true; // O bloco é válido.
