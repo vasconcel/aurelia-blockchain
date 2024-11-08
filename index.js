@@ -104,9 +104,11 @@ function mineBlock() {
 // Exibe a blockchain e verifica a integridade de cada bloco.
 function viewBlockchain() {
     const blockchain = myBlockchain.getBlockchain();
+    let isValidChain = true; // Inicializa como válido.
+
     blockchain.forEach(block => {
-        // Cria uma cópia das transações do bloco, *excluindo* a última (recompensa do minerador).
-        const transactionsWithoutReward = block.transactions.slice(0, -1); 
+        // Cria uma cópia das transações do bloco, excluindo a última (recompensa do minerador).
+        const transactionsWithoutReward = block.transactions.slice(0, -1);
 
         // Recalcula o hash usando as transações sem a recompensa.
         const recalculatedHash = hashBlockData({
@@ -116,13 +118,19 @@ function viewBlockchain() {
 
         if (recalculatedHash !== block.hash) {
             console.error(chalk.red(`Block ${block.index}: Hash mismatch! Stored: ${block.hash}, Recalculated: ${recalculatedHash}`));
-        } else {
-            console.log(chalk.green(`Block ${block.index}: Hash matches!`));
+            isValidChain = false;
         }
-
     });
+
+    // Exibe uma única mensagem de validação ou erro.
+    if (isValidChain) {
+        console.log(chalk.green("\nBlockchain integrity verified! All blocks are valid.\n"));
+    } else {
+      console.error(chalk.red("\nBlockchain integrity compromised! One or more blocks are invalid.\n"));
+    }
+
     // Exibe a blockchain formatada.
-    console.log(chalk.yellow("\nCurrent Blockchain:\n"), chalk.gray(JSON.stringify(blockchain, null, 2)));
+    console.log(chalk.yellow("Current Blockchain:\n"), chalk.gray(JSON.stringify(blockchain, null, 2)));
     displayMenu();
 }
 
