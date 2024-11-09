@@ -5,11 +5,10 @@ import { Wallet } from './Wallet.js';
 class Blockchain {
     constructor() {
         this.chain = [Block.genesis];
-        this.difficulty = 4;
+        this.difficulty = 4; // Define a dificuldade da mineração (número de zeros iniciais no hash)
         this.blockReward = 50;
         this.halvingInterval = 210000;
         this.miningRewardWallet = new Wallet(); // Cria a carteira para recompensas de mineração.
-
     }
 
     getBlockchain() {
@@ -20,6 +19,7 @@ class Blockchain {
         return this.chain[this.chain.length - 1];
     }
 
+    // Verifica se o hash começa com a quantidade certa de zeros (dificuldade).
     isValidHashDifficulty(hash) {
         return hash.startsWith("0".repeat(this.difficulty));
     }
@@ -33,6 +33,7 @@ class Blockchain {
             let timestamp = Date.now();
             const merkleRoot = generateMerkleRoot(transactions);
 
+            // Cria a transação de recompensa para o minerador
             const minerRewardTransaction = new Transaction(
                 this.miningRewardWallet,
                 this.miningRewardWallet.getAddress(),
@@ -40,7 +41,7 @@ class Blockchain {
             );
             transactions.push(minerRewardTransaction);
 
-            // Loop da Prova de Trabalho
+            // Loop da Prova de Trabalho (simplificado)
             while (true) {
                 timestamp = Date.now(); // Atualiza o timestamp a cada iteração
                 nextHash = hashBlockData({
@@ -55,9 +56,10 @@ class Blockchain {
                 if (this.isValidHashDifficulty(nextHash)) {
                     const newBlock = new Block(nextIndex, previousHash, timestamp, transactions, nextHash, nonce, merkleRoot);
 
+                    // Realiza o halving da recompensa a cada intervalo definido
                     if (nextIndex % this.halvingInterval === 0) {
                         this.blockReward /= 2;
-                        console.log(`\nBlock reward halved! New reward: ${this.blockReward} Éfira\n`);
+                        console.log(`\nBlock reward halved! New reward: ${this.blockReward}`);
                     }
 
                     resolve(newBlock);
@@ -67,17 +69,19 @@ class Blockchain {
             }
         });
 
-        this.chain.push(newBlock); // Adiciona o bloco minerado à chain
+        this.chain.push(newBlock); // Adiciona o bloco minerado à cadeia
     }
 
     addBlock(newBlock) {
-        if (this.isValidNextBlock(newBlock, this.latestBlock)) {
-            this.blockchain.push(newBlock); // Se válido, adiciona o bloco.
+        const validation = this.isValidNextBlock(newBlock, this.latestBlock);
+        if (validation === true) {
+            this.chain.push(newBlock); // Se válido, adiciona o bloco.
         } else {
-            console.error("Invalid block:", this.isValidNextBlock(newBlock, this.latestBlock));
+            console.error("Invalid block:", validation);
         }
     }
 
+    // Verifica se o próximo bloco é válido
     isValidNextBlock(nextBlock, previousBlock) {
         const nextBlockHash = hashBlockData(nextBlock);
         const recalculatedMerkleRoot = generateMerkleRoot(nextBlock.transactions); // Recalcula a Merkle Root

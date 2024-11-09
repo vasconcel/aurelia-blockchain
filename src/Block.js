@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import sha256 from 'crypto-js/sha256.js';
-import { ethers } from 'ethers';
 
 // Calcula o hash de um bloco usando sha256.
 function hashBlockData(block) {
@@ -22,7 +21,7 @@ function hashBlockData(block) {
 // Função para verificar se todas as transações são válidas
 function areTransactionsValid(transactions) {
     // Verificar se cada transação tem uma assinatura válida
-    return transactions.every(tx => tx.verifySignature(tx.senderWallet));
+    return transactions.every(tx => tx.verifySignature());
 }
 
 function generateMerkleRoot(transactions) {
@@ -75,11 +74,6 @@ class Block {
                 throw new Error(`Invalid transaction signature: ${JSON.stringify(tx)}`);
             }
         }
-    }
-
-    // Método estático para gerar um endereço a partir de uma chave pública
-    static generateAddress(publicKey) {
-        return ethers.utils.computeAddress(publicKey);
     }
 
     // Método para calcular e definir o Merkle Root

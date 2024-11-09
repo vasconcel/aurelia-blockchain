@@ -1,7 +1,7 @@
 import readline from "readline";
 import chalk from "chalk";
 import Blockchain from "./src/Blockchain.js";
-import { Transaction, TransactionList } from "./src/Transaction.js"; 
+import { Transaction, TransactionList } from "./src/Transaction.js";
 import { Wallet } from "./src/Wallet.js";
 
 // Constantes para cores do console
@@ -11,9 +11,9 @@ const COLOR_SCHEME = {
     success: chalk.green,
     warning: chalk.yellow,
     error: chalk.red,
-    info: chalk.rgb(0, 191, 255), // wave
-    light: chalk.rgb(157, 255, 199), // seafoam
-    accent: chalk.rgb(255, 127, 80), // coral
+    info: chalk.rgb(0, 191, 255),
+    light: chalk.rgb(157, 255, 199),
+    accent: chalk.rgb(255, 127, 80),
 };
 
 // Interface de leitura de linha
@@ -62,36 +62,38 @@ function handleChoice(choice) {
 async function addTransaction() {
     try {
         const senderWallet = new Wallet();
-        const recipientAddress = await new Promise((resolve) => {
-            rl.question(COLOR_SCHEME.primary("Enter the recipient's address: "), (address) => {
-                resolve(address);
-            });
-        });
-        const amount = await new Promise((resolve) => {
-            rl.question(COLOR_SCHEME.primary("Enter the amount of Éfira to transfer: "), (amt) => {
-                resolve(parseFloat(amt));
-            });
-        });
+        let recipientAddress;
+        while (true) {
+            recipientAddress = await new Promise((resolve) =>
+                rl.question(COLOR_SCHEME.primary("Enter the recipient's address (0x...): "), resolve)
+            );
+            if (typeof recipientAddress === 'string' && recipientAddress.startsWith('0x')) {
+                break;
+            } else {
+                console.log(COLOR_SCHEME.error("Invalid recipient address. Please enter a valid address."));
+            }
+        }
 
-        if (isNaN(amount) || amount <= 0) {
-            console.log(COLOR_SCHEME.error("Invalid amount. Please enter a valid number."));
-            return addTransaction();
+        let amount;
+        while (true) {
+            amount = await new Promise((resolve) =>
+                rl.question(COLOR_SCHEME.primary("Enter the amount to send: "), resolve)
+            );
+            if (!isNaN(amount) && parseFloat(amount) > 0) {
+                amount = parseFloat(amount);
+                break;
+            } else {
+                console.log(COLOR_SCHEME.error("Invalid amount. Please enter a valid number greater than 0."));
+            }
         }
 
         const transaction = new Transaction(senderWallet, recipientAddress, amount);
-
-        // Aguarde a assinatura da transação
-        await transaction.signTransaction(); // Aguarda a promise da assinatura
-
+        transaction.signTransaction();
         transactionList.addTransaction(transaction);
-
-        console.log(COLOR_SCHEME.success(`Transaction added: ${await transaction.displayTransaction()}\n`)); // Aguarda displayTransaction
-        console.log(COLOR_SCHEME.info(`Sender Address: ${senderWallet.getAddress()}`))
-
+        console.log(COLOR_SCHEME.success("Transaction added successfully!\n"));
 
     } catch (error) {
-       console.error(COLOR_SCHEME.error("Error adding transaction:", error));
-
+        console.error(COLOR_SCHEME.error("Error adding transaction:", error));
     }
 
     displayMenu();
@@ -110,16 +112,21 @@ async function mineBlock() {
     console.log(COLOR_SCHEME.warning("Mining...\n"));
 
     try {
-        // Tenta minerar o bloco
         await blockchain.mine(transactions);
         console.log(COLOR_SCHEME.success("Mining complete!\n"));
         transactionList.clearTransactions();
     } catch (error) {
-        console.error(COLOR_SCHEME.error("Mining error:", error)); // Exibe erro caso ocorra
+        console.error(COLOR_SCHEME.error("Mining error:", error));
     } finally {
-        // Garante que o menu seja exibido, independentemente de erro
         displayMenu();
     }
+}
+
+// Função para visualizar a blockchain
+function viewBlockchain() {
+    console.log(COLOR_SCHEME.secondary("\nViewing Blockchain...\n"));
+    blockchain.getBlockchain().forEach((block) => console.log(JSON.stringify(block, null, 2)));
+    displayMenu();
 }
 
 // Função para sair do aplicativo
