@@ -1,49 +1,67 @@
 import crypto from 'crypto';
+import { Wallet } from './Wallet.js';
 
-class Transaction {
-    constructor(sender, recipient, amount) {
-        this.sender = sender; // Endereço do remetente.
-        this.recipient = recipient; // Endereço do destinatário.
-        this.amount = amount; // Valor da transação.
-        this.timestamp = Date.now(); // Marca temporal da transação.
-        this.transactionHash = this.calculateHash(); // Calcula o hash da transação.
+export class Transaction {
+    constructor(senderWallet, recipientAddress, amount) {
+        this.senderWallet = senderWallet;
+        this.recipient = recipientAddress;
+        this.amount = amount;
+        this.timestamp = Date.now(); // Usar timestamp numérico para facilitar a verificação
     }
+
 
     calculateHash() {
-        // Gera um hash único para a transação com base nos dados.
-        const data = this.sender + this.recipient + this.amount + this.timestamp;
-        return crypto.createHash("sha256").update(data).digest("hex");
+        const dataToHash = `${this.senderWallet.getPublicKey()}${this.recipient}${this.amount}${this.timestamp}`;
+        const hash = crypto.createHash('sha256').update(dataToHash).digest('hex');
+        return hash;
     }
 
-    displayTransaction() {
-        // Exibe detalhes da transação de forma legível.
-        return `Transaction Hash: ${this.transactionHash}\n` +
-               `From: ${this.sender}\n` +
-               `To: ${this.recipient}\n` +
-               `Value: ${this.amount}\n` +
-               `Timestamp: ${new Date(this.timestamp).toLocaleString()}\n`;
+    async signTransaction() { // Tornar assíncrono
+        if (!this.senderWallet || typeof this.senderWallet.signTransaction !== 'function') {
+            throw new Error('Sender wallet must be provided and have a signTransaction method.');
+        }
+
+        this.signature = await this.senderWallet.signTransaction(this); // Aguardar a assinatura
+
+
     }
+
+    verifySignature() {
+        if (!this.senderWallet || typeof this.senderWallet.verifyTransaction !== 'function') {
+            throw new Error('Sender wallet must be provided and have a verifyTransaction method.');
+        }
+        if (!this.signature) {
+            throw new Error('Transaction must be signed before verification.');
+
+        }
+
+        return this.senderWallet.verifyTransaction(this, this.signature);
+    }
+
+
+
+    async displayTransaction() { // Tornar assíncrono para esperar a assinatura, se necessário.
+        const signature = this.signature ? this.signature : "Not signed yet"; // Exibir mensagem se não assinada
+        return `Transaction Hash: ${this.calculateHash()}\nFrom: ${this.senderWallet.getAddress()}\nTo: ${this.recipient}\nValue: ${this.amount}\nTimestamp: ${new Date(this.timestamp).toLocaleString()}\nSignature: ${signature}`;
+
+    }
+
 }
 
-class TransactionList {
+export class TransactionList {
     constructor() {
-        this.transactions = []; // Inicializa a lista de transações.
+        this.transactions = [];
     }
 
     addTransaction(transaction) {
-        // Adiciona uma nova transação à lista.
         this.transactions.push(transaction);
     }
 
     getTransactions() {
-        // Retorna todas as transações na lista.
         return this.transactions;
     }
 
     clearTransactions() {
-        // Limpa a lista de transações.
         this.transactions = [];
     }
 }
-
-export { Transaction, TransactionList };

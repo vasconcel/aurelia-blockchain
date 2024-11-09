@@ -1,80 +1,73 @@
 import { Block, hashBlockData, generateMerkleRoot } from "./Block.js";
 import { Transaction } from "./Transaction.js";
+import { Wallet } from './Wallet.js';
 
 class Blockchain {
     constructor() {
-        this.blockchain = [Block.genesis]; // Inicia a blockchain com o bloco gênesis.
-        this.difficulty = 4;              // Dificuldade de mineração (número de zeros no hash).
-        this.blockReward = 50;            // Recompensa inicial para mineradores.
-        this.halvingInterval = 210000;    // Intervalo para reduzir a recompensa pela metade.
+        this.chain = [Block.genesis];
+        this.difficulty = 4;
+        this.blockReward = 50;
+        this.halvingInterval = 210000;
+        this.miningRewardWallet = new Wallet(); // Cria a carteira para recompensas de mineração.
+
     }
 
     getBlockchain() {
-        return this.blockchain;
+        return this.chain;
     }
 
     get latestBlock() {
-        return this.blockchain[this.blockchain.length - 1]; // Retorna o último bloco.
+        return this.chain[this.chain.length - 1];
     }
 
     isValidHashDifficulty(hash) {
-        return hash.startsWith("0".repeat(this.difficulty)); // Verifica se o hash começa com 'n' zeros.
+        return hash.startsWith("0".repeat(this.difficulty));
     }
 
     async mine(transactions) {
-        try {
-            const newBlock = await this.generateNextBlock(transactions); // Gera o próximo bloco.
-            this.addBlock(newBlock); // Adiciona o bloco à blockchain.
-            console.log("\nBlock mined:", newBlock);
-        } catch (error) {
-            console.log("Mining error:", error);
-        }
-    }
+        let nextHash, nonce = 0;
 
-    generateNextBlock(transactions) {
-        const nextIndex = this.latestBlock.index + 1;
-        const previousHash = this.latestBlock.hash;
-        let timestamp = Date.now();
-        let nonce = 0;
-        const merkleRoot = generateMerkleRoot(transactions); // Calcula a Merkle Root
+        const newBlock = await new Promise(async (resolve) => {
+            const nextIndex = this.latestBlock.index + 1;
+            const previousHash = this.latestBlock.hash;
+            let timestamp = Date.now();
+            const merkleRoot = generateMerkleRoot(transactions);
 
-        const createHash = () => hashBlockData({
-            index: nextIndex,
-            previousHash,
-            timestamp,
-            merkleRoot, // Inclui a Merkle Root
-            nonce
-        });
-
-        let nextHash = createHash();
-
-        return new Promise((resolve) => {
-            // Executa Proof-of-Work até encontrar um hash que satisfaça a dificuldade.
-            while (!this.isValidHashDifficulty(nextHash)) {
-                nonce++;
-                timestamp = Date.now();
-                nextHash = createHash();
-            }
-
-            // Adiciona uma transação de recompensa ao minerador.
             const minerRewardTransaction = new Transaction(
-                "Aurelia Network",  // Origem da recompensa.
-                "Miner Address",    // Endereço do minerador.
-                this.blockReward    // Valor da recompensa.
+                this.miningRewardWallet,
+                this.miningRewardWallet.getAddress(),
+                this.blockReward
             );
+            transactions.push(minerRewardTransaction);
 
-            transactions.push(minerRewardTransaction); // Adiciona recompensa ao bloco.
+            // Loop da Prova de Trabalho
+            while (true) {
+                timestamp = Date.now(); // Atualiza o timestamp a cada iteração
+                nextHash = hashBlockData({
+                    index: nextIndex,
+                    previousHash,
+                    timestamp,
+                    transactions,
+                    nonce,
+                    merkleRoot
+                });
 
-            const newBlock = new Block(nextIndex, previousHash, timestamp, transactions, nextHash, nonce, merkleRoot);
+                if (this.isValidHashDifficulty(nextHash)) {
+                    const newBlock = new Block(nextIndex, previousHash, timestamp, transactions, nextHash, nonce, merkleRoot);
 
-            // Aplica halving da recompensa após o intervalo definido.
-            if (nextIndex % this.halvingInterval === 0) {
-                this.blockReward /= 2;
-                console.log(`\nBlock reward halved! New reward: ${this.blockReward} Éfira\n`);
+                    if (nextIndex % this.halvingInterval === 0) {
+                        this.blockReward /= 2;
+                        console.log(`\nBlock reward halved! New reward: ${this.blockReward} Éfira\n`);
+                    }
+
+                    resolve(newBlock);
+                    break; // Sai do loop quando um hash válido é encontrado
+                }
+                nonce++; // Incrementa o nonce para a próxima tentativa
             }
-
-            resolve(newBlock); // Retorna o novo bloco após a mineração.
         });
+
+        this.chain.push(newBlock); // Adiciona o bloco minerado à chain
     }
 
     addBlock(newBlock) {

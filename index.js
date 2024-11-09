@@ -1,7 +1,8 @@
 import readline from "readline";
 import chalk from "chalk";
 import Blockchain from "./src/Blockchain.js";
-import { Transaction, TransactionList } from "./src/Transaction.js";
+import { Transaction, TransactionList } from "./src/Transaction.js"; 
+import { Wallet } from "./src/Wallet.js";
 
 // Constantes para cores do console
 const COLOR_SCHEME = {
@@ -58,24 +59,42 @@ function handleChoice(choice) {
 }
 
 // Função para adicionar uma nova transação
-function addTransaction() {
-    rl.question(COLOR_SCHEME.primary("Enter the sender's name: "), (sender) => {
-        rl.question(COLOR_SCHEME.primary("Enter the recipient's name: "), (recipient) => {
-            rl.question(COLOR_SCHEME.primary("Enter the amount of Éfira to transfer: "), (amount) => {
-                const amountValue = parseFloat(amount);
-
-                if (isNaN(amountValue) || amountValue <= 0) {
-                    console.log(COLOR_SCHEME.error("Please enter a valid amount."));
-                    return addTransaction();
-                }
-
-                const transaction = new Transaction(sender, recipient, amountValue);
-                transactionList.addTransaction(transaction);
-                console.log(COLOR_SCHEME.success(`Transaction added: ${transaction.displayTransaction()}\n`));
-                displayMenu();
+async function addTransaction() {
+    try {
+        const senderWallet = new Wallet();
+        const recipientAddress = await new Promise((resolve) => {
+            rl.question(COLOR_SCHEME.primary("Enter the recipient's address: "), (address) => {
+                resolve(address);
             });
         });
-    });
+        const amount = await new Promise((resolve) => {
+            rl.question(COLOR_SCHEME.primary("Enter the amount of Éfira to transfer: "), (amt) => {
+                resolve(parseFloat(amt));
+            });
+        });
+
+        if (isNaN(amount) || amount <= 0) {
+            console.log(COLOR_SCHEME.error("Invalid amount. Please enter a valid number."));
+            return addTransaction();
+        }
+
+        const transaction = new Transaction(senderWallet, recipientAddress, amount);
+
+        // Aguarde a assinatura da transação
+        await transaction.signTransaction(); // Aguarda a promise da assinatura
+
+        transactionList.addTransaction(transaction);
+
+        console.log(COLOR_SCHEME.success(`Transaction added: ${await transaction.displayTransaction()}\n`)); // Aguarda displayTransaction
+        console.log(COLOR_SCHEME.info(`Sender Address: ${senderWallet.getAddress()}`))
+
+
+    } catch (error) {
+       console.error(COLOR_SCHEME.error("Error adding transaction:", error));
+
+    }
+
+    displayMenu();
 }
 
 // Função para minerar um bloco
@@ -91,20 +110,16 @@ async function mineBlock() {
     console.log(COLOR_SCHEME.warning("Mining...\n"));
 
     try {
+        // Tenta minerar o bloco
         await blockchain.mine(transactions);
         console.log(COLOR_SCHEME.success("Mining complete!\n"));
         transactionList.clearTransactions();
     } catch (error) {
-        console.error(COLOR_SCHEME.error("Mining error:", error));
-    } finally { // Garante que o menu será exibido mesmo com erros.
+        console.error(COLOR_SCHEME.error("Mining error:", error)); // Exibe erro caso ocorra
+    } finally {
+        // Garante que o menu seja exibido, independentemente de erro
         displayMenu();
     }
-}
-
-// Função para visualizar a blockchain
-function viewBlockchain() {
-  console.log(COLOR_SCHEME.warning("Current Blockchain:\n"), chalk.gray(JSON.stringify(blockchain.getBlockchain(), null, 2)));
-  displayMenu();
 }
 
 // Função para sair do aplicativo
