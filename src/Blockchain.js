@@ -127,7 +127,13 @@ class Blockchain {
 
     isValidChain() {
         for (let i = 1; i < this.chain.length; i++) {
-            if (!this.isValidNextBlock(this.chain[i], this.chain[i - 1])) {
+            try {
+                if (!this.isValidNextBlock(this.chain[i], this.chain[i - 1])) {
+                    return false;
+                }
+                this.chain[i].validateTransactions(); // Adiciona validação de transações
+            } catch (error) {
+                console.error(`Error validating block ${i}:`, error);
                 return false;
             }
         }
