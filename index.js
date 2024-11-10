@@ -32,7 +32,8 @@ function displayMenu() {
     console.log(`${COLOR_SCHEME.primary("1.")} ${COLOR_SCHEME.light("Add transaction")}`);
     console.log(`${COLOR_SCHEME.primary("2.")} ${COLOR_SCHEME.light("Mine block")}`);
     console.log(`${COLOR_SCHEME.primary("3.")} ${COLOR_SCHEME.light("View blockchain")}`);
-    console.log(`${COLOR_SCHEME.primary("4.")} ${COLOR_SCHEME.accent("Exit")}`);
+    console.log(`${COLOR_SCHEME.primary("4.")} ${COLOR_SCHEME.light("View address history")}`);
+    console.log(`${COLOR_SCHEME.primary("5.")} ${COLOR_SCHEME.accent("Exit")}`);
 
     rl.question(COLOR_SCHEME.info("Enter your choice: "), handleChoice);
 }
@@ -50,6 +51,9 @@ function handleChoice(choice) {
             viewBlockchain();
             break;
         case "4":
+            viewAddressHistory();
+            break;
+        case "5":
             exitApplication();
             break;
         default:
@@ -128,6 +132,27 @@ function viewBlockchain() {
     blockchain.getBlockchain().forEach((block) => console.log(JSON.stringify(block, null, 2)));
     displayMenu();
 }
+
+// Função para visualizar o histórico de um endereço
+async function viewAddressHistory() {
+    const address = await new Promise((resolve) =>
+        rl.question(COLOR_SCHEME.primary("Enter the address (0x...): "), resolve)
+    );
+
+    const history = blockchain.getAddressHistory(address);
+
+    if (history.length === 0) {
+        console.log(COLOR_SCHEME.warning(`No transactions found for address: ${address}`));
+    } else {
+        console.log(COLOR_SCHEME.secondary(`\nTransaction history for ${address}:\n`));
+        for (const transaction of history) {
+            const displayTx = await transaction.displayTransaction(); // Aguarda a resolução da Promise
+            console.log(`${COLOR_SCHEME.primary(`Transaction:`)}\n${displayTx}\n`);
+        }
+    }
+    displayMenu();
+}
+
 
 // Função para sair do aplicativo
 function exitApplication() {

@@ -10,6 +10,7 @@ export class Transaction {
         this.recipient = recipientAddress;
         this.amount = amount;
         this.timestamp = Date.now();
+        this.signature = null; // Inicializa a assinatura como nula
     }
 
     calculateHash() {
@@ -22,11 +23,13 @@ export class Transaction {
     }
 
     verifySignature() {
+        if (!this.signature) return false; // Verifica se a transação foi assinada
         return this.senderWallet.verifyTransaction(this, this.signature);
     }
 
-    displayTransaction() {
-        const signatureStatus = this.signature ? this.signature : "Not signed yet";
+    async displayTransaction() { // Transforma em função assíncrona
+        const signature = await this.signature; // Aguarda a resolução da Promise de assinatura
+        const signatureStatus = signature ? signature : "Not signed yet";
         return `Transaction Hash: ${this.calculateHash()}\nFrom: ${this.senderWallet.getAddress()}\nTo: ${this.recipient}\nAmount: ${this.amount}\nTimestamp: ${new Date(this.timestamp).toLocaleString()}\nSignature: ${signatureStatus}`;
     }
 }
