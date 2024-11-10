@@ -1,10 +1,15 @@
+// Importa o módulo readline para leitura de entradas do usuário via console
 import readline from "readline";
+
+// Importa o módulo chalk para estilização do texto no console com cores
 import chalk from "chalk";
+
+// Importa as classes Blockchain, Transaction e Wallet para manipulação de blockchain e transações
 import Blockchain from "./src/Blockchain.js";
 import { Transaction, TransactionList } from "./src/Transaction.js";
 import { Wallet } from "./src/Wallet.js";
 
-// Constantes para cores do console
+// Definição de um esquema de cores para mensagens no console, visando legibilidade e distinção entre tipos de mensagens
 const COLOR_SCHEME = {
     primary: chalk.cyanBright,
     secondary: chalk.blue,
@@ -16,17 +21,17 @@ const COLOR_SCHEME = {
     accent: chalk.rgb(255, 127, 80),
 };
 
-// Interface de leitura de linha
+// Criação de uma interface de leitura de linha para capturar inputs do usuário
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
 });
 
-// Instâncias da blockchain e da lista de transações
+// Instância da blockchain e lista de transações para gerenciamento de operações
 const blockchain = new Blockchain();
 const transactionList = new TransactionList();
 
-// Função principal para exibir o menu
+// Exibe o menu principal com opções de ações para o usuário
 function displayMenu() {
     console.log(COLOR_SCHEME.secondary("\nChoose an action:"));
     console.log(`${COLOR_SCHEME.primary("1.")} ${COLOR_SCHEME.light("Add transaction")}`);
@@ -35,10 +40,11 @@ function displayMenu() {
     console.log(`${COLOR_SCHEME.primary("4.")} ${COLOR_SCHEME.light("View address history")}`);
     console.log(`${COLOR_SCHEME.primary("5.")} ${COLOR_SCHEME.accent("Exit")}`);
 
+    // Solicita ao usuário uma escolha e lida com a resposta
     rl.question(COLOR_SCHEME.info("Enter your choice: "), handleChoice);
 }
 
-// Função para lidar com a escolha do usuário
+// Processa a escolha do usuário e executa a ação correspondente
 function handleChoice(choice) {
     switch (choice) {
         case "1":
@@ -62,11 +68,13 @@ function handleChoice(choice) {
     }
 }
 
-// Função para adicionar uma nova transação
+// Adiciona uma nova transação, solicitando endereço do destinatário e valor ao usuário
 async function addTransaction() {
     try {
         const senderWallet = new Wallet();
         let recipientAddress;
+
+        // Solicita um endereço válido do destinatário
         while (true) {
             recipientAddress = await new Promise((resolve) =>
                 rl.question(COLOR_SCHEME.primary("Enter the recipient's address (0x...): "), resolve)
@@ -79,6 +87,8 @@ async function addTransaction() {
         }
 
         let amount;
+
+        // Solicita um valor válido para transação
         while (true) {
             amount = await new Promise((resolve) =>
                 rl.question(COLOR_SCHEME.primary("Enter the amount to send: "), resolve)
@@ -91,6 +101,7 @@ async function addTransaction() {
             }
         }
 
+        // Cria e assina a transação, depois a adiciona à lista de transações
         const transaction = new Transaction(senderWallet, recipientAddress, amount);
         transaction.signTransaction();
         transactionList.addTransaction(transaction);
@@ -100,13 +111,15 @@ async function addTransaction() {
         console.error(COLOR_SCHEME.error("Error adding transaction:", error));
     }
 
+    // Retorna ao menu principal
     displayMenu();
 }
 
-// Função para minerar um bloco
+// Realiza a mineração de um bloco com as transações pendentes
 async function mineBlock() {
     const transactions = transactionList.getTransactions();
 
+    // Verifica se há transações para minerar
     if (transactions.length === 0) {
         console.log(COLOR_SCHEME.error("\nNo transactions to mine. Please add some transactions first.\n"));
         displayMenu();
@@ -116,24 +129,26 @@ async function mineBlock() {
     console.log(COLOR_SCHEME.warning("Mining...\n"));
 
     try {
+        // Executa a mineração do bloco e limpa a lista de transações pendentes
         await blockchain.mine(transactions);
         console.log(COLOR_SCHEME.success("Mining complete!\n"));
         transactionList.clearTransactions();
     } catch (error) {
         console.error(COLOR_SCHEME.error("Mining error:", error));
     } finally {
+        // Retorna ao menu principal
         displayMenu();
     }
 }
 
-// Função para visualizar a blockchain
+// Exibe o conteúdo da blockchain no console
 function viewBlockchain() {
     console.log(COLOR_SCHEME.secondary("\nViewing Blockchain...\n"));
     blockchain.getBlockchain().forEach((block) => console.log(JSON.stringify(block, null, 2)));
     displayMenu();
 }
 
-// Função para visualizar o histórico de um endereço
+// Exibe o histórico de transações de um endereço especificado
 async function viewAddressHistory() {
     const address = await new Promise((resolve) =>
         rl.question(COLOR_SCHEME.primary("Enter the address (0x...): "), resolve)
@@ -146,20 +161,19 @@ async function viewAddressHistory() {
     } else {
         console.log(COLOR_SCHEME.secondary(`\nTransaction history for ${address}:\n`));
         for (const transaction of history) {
-            const displayTx = await transaction.displayTransaction(); // Aguarda a resolução da Promise
+            const displayTx = await transaction.displayTransaction();
             console.log(`${COLOR_SCHEME.primary(`Transaction:`)}\n${displayTx}\n`);
         }
     }
     displayMenu();
 }
 
-
-// Função para sair do aplicativo
+// Encerra a aplicação, fechando a interface de leitura
 function exitApplication() {
     console.log(COLOR_SCHEME.secondary("\nExiting Aurelia Network...\n"));
     rl.close();
 }
 
-// Inicia a aplicação exibindo o menu.
+// Inicia a aplicação com uma mensagem de boas-vindas e exibe o menu
 console.log(COLOR_SCHEME.primary("\nWelcome to the Aurelia Network!\n"));
 displayMenu();
