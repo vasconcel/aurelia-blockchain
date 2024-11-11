@@ -1,10 +1,5 @@
-// Importa o módulo readline para leitura de entradas do usuário via console
 import readline from "readline";
-
-// Importa o módulo chalk para estilização do texto no console com cores
 import chalk from "chalk";
-
-// Importa as classes Blockchain, Transaction e Wallet para manipulação de blockchain e transações
 import Blockchain from "./src/Blockchain.js";
 import { Transaction, TransactionList } from "./src/Transaction.js";
 import { Wallet } from "./src/Wallet.js";
