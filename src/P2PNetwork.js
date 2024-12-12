@@ -13,15 +13,11 @@ class P2PNetwork {
     }
 
     broadcastTransaction(transaction) {
-        this.nodes.forEach(node => {
-            node.onTransactionReceived(transaction);
-        });
+        this.nodes.forEach(node => node.onTransactionReceived(transaction));
     }
 
     broadcastBlock(block) {
-        this.nodes.forEach(node => {
-            node.onBlockReceived(block);
-        });
+        this.nodes.forEach(node => node.onBlockReceived(block));
     }
 
     onTransactionReceived(transaction) {
@@ -73,7 +69,7 @@ class P2PNetwork {
     }
 
     requestMissingBlocks(startIndex, endIndex) {
-       console.warn(`Solicitando blocos de ${startIndex} a ${endIndex}...`);
+        console.warn(`Solicitando blocos de ${startIndex} a ${endIndex}...`);
     }
 }
 
