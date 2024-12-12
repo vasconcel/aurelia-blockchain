@@ -3,25 +3,14 @@ import sha256 from 'crypto-js/sha256.js';
 
 function hashBlockData(block) {
     const { index, previousHash, timestamp, merkleRoot, nonce } = block;
-
-    const data = JSON.stringify({
-        index,
-        previousHash,
-        timestamp,
-        merkleRoot,
-        nonce
-    });
-
+    const data = JSON.stringify({ index, previousHash, timestamp, merkleRoot, nonce });
     return crypto.createHash("sha256").update(data).digest("hex");
 }
 
 function generateMerkleRoot(transactions) {
-    if (!transactions || transactions.length === 0) {
-        return null;
-    }
+    if (!transactions || transactions.length === 0) return null;
 
     let hashes = transactions.map(tx => sha256(JSON.stringify(tx)).toString());
-
     while (hashes.length > 1) {
         const newHashes = [];
         for (let i = 0; i < hashes.length; i += 2) {
@@ -31,7 +20,6 @@ function generateMerkleRoot(transactions) {
         }
         hashes = newHashes;
     }
-
     return hashes[0];
 }
 
@@ -47,12 +35,10 @@ class Block {
     }
 
     static get genesis() {
-        const genesisTransactions = []; // Bloco gênesis inicia sem transações.
+        const genesisTransactions = [];
         const genesisMerkleRoot = generateMerkleRoot(genesisTransactions);
-        
         const genesisBlock = new Block(0, "0", 1678886400000, genesisTransactions, null, 0, genesisMerkleRoot);
-        genesisBlock.hash = hashBlockData(genesisBlock); // Define o hash após a criação do bloco.
-        
+        genesisBlock.hash = hashBlockData(genesisBlock);
         return genesisBlock;
     }
 
