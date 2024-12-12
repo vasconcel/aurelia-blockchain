@@ -1,7 +1,6 @@
 import crypto from 'crypto';
-import { Wallet } from './Wallet.js';
 
-export class Transaction {
+class Transaction {
     constructor(senderWallet, recipientAddress, amount, fee) {
         if (!senderWallet || !recipientAddress || typeof amount !== 'number' || amount <= 0) {
             throw new Error('Invalid transaction parameters.');
@@ -39,7 +38,7 @@ export class Transaction {
     }
 }
 
-export class TransactionList {
+class TransactionList {
     constructor() {
         this.transactions = [];
     }
@@ -60,3 +59,5 @@ export class TransactionList {
         this.transactions = [];
     }
 }
+
+export { Transaction, TransactionList };
