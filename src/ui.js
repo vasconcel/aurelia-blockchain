@@ -1,5 +1,5 @@
 import readline from "readline";
-import { COLOR_SCHEME } from '../index.js';
+import { COLOR_SCHEME, addTransaction, viewBlockchain, viewAddressHistory, exitApplication } from '../index.js';
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -39,17 +39,5 @@ export function handleChoice(choice) {
         default:
             console.log(COLOR_SCHEME.error("Invalid choice. Please try again."));
             displayMenu();
-    }
-}
-
-export async function askForValidInput(prompt, validationFn) {
-    let input;
-    while (true) {
-        input = await questionAsync(COLOR_SCHEME.primary(prompt));
-        if (validationFn(input)) {
-            return input;
-        } else {
-            console.log(COLOR_SCHEME.error("Invalid input. Please try again."));
-        }
     }
 }
