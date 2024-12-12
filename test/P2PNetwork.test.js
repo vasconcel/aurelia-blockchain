@@ -30,71 +30,70 @@ describe('P2PNetwork', () => {
         const node2 = new P2PNetwork(new Blockchain());
         p2pNetwork.connectToPeer(node1);
         p2pNetwork.connectToPeer(node2);
-    
+
         const senderWallet = new Wallet();
         const senderAddress = senderWallet.getAddress();
-    
+
         initializeBalances(blockchain, senderAddress, 100);
         initializeBalances(node1.blockchain, senderAddress, 100);
         initializeBalances(node2.blockchain, senderAddress, 100);
-    
+
         const transaction = new Transaction(senderWallet, '0xRecipient', 10, 1);
         transaction.signature = await transaction.signTransaction();
-    
+
         await p2pNetwork.broadcastTransaction(transaction);
-    
+
         expect(node1.transactionPool.length).to.equal(1, 'Node 1 should have received the transaction');
         expect(node2.transactionPool.length).to.equal(1, 'Node 2 should have received the transaction');
+        expect(node1.transactionPool[0].fee).to.equal(1, 'Node 1 should have received the transaction with correct fee'); // Verifica a taxa
+        expect(node2.transactionPool[0].fee).to.equal(1, 'Node 2 should have received the transaction with correct fee'); // Verifica a taxa
     });
-    
+
     it('deve lidar com o recebimento de uma transação válida', async () => {
         const wallet = new Wallet();
         initializeBalances(blockchain, wallet.getAddress(), 100);
-    
+
         const transaction = new Transaction(wallet, '0xRecipient', 10, 1);
         transaction.signature = await transaction.signTransaction();
-    
+
         await p2pNetwork.onTransactionReceived(transaction);
         expect(p2pNetwork.transactionPool.length).to.equal(1);
+        expect(p2pNetwork.transactionPool[0].fee).to.equal(1);
     });
 
     it('não deve adicionar uma transação inválida ao pool', async () => {
         const wallet = new Wallet();
 
         const transaction = new Transaction(wallet, '0xRecipient', 10, 1);
-        await transaction.signTransaction();
-        transaction.signature = await transaction.signature;
+        transaction.signature = await transaction.signTransaction();
 
         await p2pNetwork.onTransactionReceived(transaction);
-        const index = p2pNetwork.transactionPool.indexOf(transaction);
-            if (index > -1) {
-                p2pNetwork.transactionPool.splice(index, 1);
-            }
+
         expect(p2pNetwork.transactionPool.length).to.equal(0);
     });
 
     it('deve minerar um bloco quando o pool de transações estiver cheio', async () => {
         const senderWallet = new Wallet();
         initializeBalances(blockchain, senderWallet.getAddress(), 500);
-    
+
         const transaction1 = new Transaction(senderWallet, '0xRecipient', 5, 0.5);
         const transaction2 = new Transaction(senderWallet, '0xRecipient', 5, 0.5);
         await transaction1.signTransaction();
         await transaction2.signTransaction();
-        transaction1.signature = await transaction1.signature;
-        transaction2.signature = await transaction2.signature;
-    
+
         p2pNetwork.transactionPool.push(transaction1);
         p2pNetwork.transactionPool.push(transaction2);
-    
+
         expect(p2pNetwork.transactionPool.length).to.equal(2);
-    
+
         const newBlock = await p2pNetwork.mineBlockWithTransactions();
-    
+
         expect(p2pNetwork.transactionPool.length).to.equal(0);
-    
+
         if (newBlock) {
             expect(blockchain.chain.length).to.equal(2);
+            const minerRewardTransaction = newBlock.transactions[0];
+            expect(minerRewardTransaction.amount).to.equal(blockchain.blockReward + transaction1.fee + transaction2.fee);
         } else {
             expect(blockchain.chain.length).to.equal(1);
         }
@@ -104,16 +103,16 @@ describe('P2PNetwork', () => {
         const wallet = new Wallet();
         const anotherBlockchain = new Blockchain();
         const anotherNode = new P2PNetwork(anotherBlockchain);
-    
+
         initializeBalances(anotherBlockchain, wallet.getAddress(), 500);
-    
+
         const validTransaction = new Transaction(wallet, '0xRecipient', 10, 1);
         validTransaction.signature = await validTransaction.signTransaction();
-    
+
         const block = await anotherBlockchain.mine([validTransaction]);
-    
+
         await anotherNode.onBlockReceived(block);
-    
+
         if (block && block.transactions && block.transactions.length > 1) {
             expect(anotherNode.blockchain.chain.length).to.equal(anotherBlockchain.chain.length);
             expect(anotherNode.blockchain.latestBlock.hash).to.equal(block.hash);
@@ -130,7 +129,7 @@ describe('P2PNetwork', () => {
 
     it('deve resolver fork de mesmo nível com base no timestamp', async () => {
         const wallet = new Wallet();
-        initializeBalances(blockchain, wallet.getAddress(), 100);
+        initializeBalances(blockchain, wallet.getAddress(), 500);
     
         const validTransaction = new Transaction(wallet, '0xRecipient', 10, 1);
         await validTransaction.signTransaction();
@@ -148,7 +147,7 @@ describe('P2PNetwork', () => {
             console.error("Erro: block1 é inválido ou não tem um timestamp.");
             return;
         }
-
+    
         const laterTimestamp = block1.timestamp + 2000;
     
         const nextIndex = forkedBlockchain.latestBlock.index + 1;
@@ -197,10 +196,10 @@ describe('P2PNetwork', () => {
                 anotherNode.blockchain.addBlock(block1);
                 anotherNode.onBlockReceived(block2);
     
-                if (anotherNode.blockchain.latestBlock && anotherNode.blockchain.latestBlock.transactions && anotherNode.blockchain.latestBlock.transactions.length > 1) {
-                    expect(anotherNode.blockchain.latestBlock.hash).to.equal(block1.hash);
+                if (anotherNode.blockchain.latestBlock && anotherNode.blockchain.latestBlock.timestamp === laterTimestamp) {
+                    expect(anotherNode.blockchain.latestBlock.hash).to.equal(block2.hash);
                 } else {
-                    expect(anotherNode.blockchain.latestBlock.hash).to.equal(blockchain.latestBlock.hash);
+                    expect(anotherNode.blockchain.latestBlock.hash).to.equal(block1.hash);
                 }
                 break;
             }
