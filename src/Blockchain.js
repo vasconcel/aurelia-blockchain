@@ -2,42 +2,30 @@ import { Block, hashBlockData, generateMerkleRoot } from "./Block.js";
 import { Transaction } from "./Transaction.js";
 import { Wallet } from './Wallet.js';
 
-// Classe que representa a Blockchain
 class Blockchain {
     constructor() {
-        // Inicia a blockchain com o bloco gênesis
         this.chain = [Block.genesis];
-        
-        // Definições de dificuldade e recompensa de mineração
-        this.difficulty = 4;            // Quantidade de zeros exigidos no hash para validar o bloco
-        this.blockReward = 50;          // Recompensa inicial para mineradores por bloco
-        this.halvingInterval = 210000;  // Intervalo para halving da recompensa (em blocos)
-        
-        // Carteira usada para a recompensa de mineração
-        this.miningRewardWallet = new Wallet();
-        
-        // Índice de transações para rastrear histórico de transações de endereços
+        this.difficulty = 4;
+        this.blockReward = 50;
+        this.halvingInterval = 210000;
+        this.miningRewardWallet = new Wallet();     
         this.transactionIndex = {};
     }
 
-    // Retorna a cadeia de blocos
     getBlockchain() {
         return this.chain;
     }
 
-    // Retorna o último bloco da cadeia
     get latestBlock() {
         return this.chain[this.chain.length - 1];
     }
 
-    // Verifica se o hash do bloco atende à dificuldade atual da rede
     isValidHashDifficulty(hash) {
         return hash.startsWith("0".repeat(this.difficulty));
     }
 
     // Método assíncrono para mineração de um novo bloco
     async mine(transactions) {
-        // Verifica se há transações para minerar
         if (!transactions || transactions.length === 0) {
             throw new Error("No transactions to mine.");
         }
@@ -60,7 +48,7 @@ class Blockchain {
 
         // Loop de mineração até encontrar um hash válido
         while (true) {
-            timestamp = Date.now(); // Atualiza o timestamp em cada iteração
+            timestamp = Date.now();
             nextHash = hashBlockData({
                 index: nextIndex,
                 previousHash,
@@ -70,9 +58,8 @@ class Blockchain {
                 merkleRoot,
             });
 
-            // Verifica se o hash gerado atende à dificuldade
+            // Verifica se o hash gerado atende à dificuldade, cria o novo bloco e atualiza a recompensa
             if (this.isValidHashDifficulty(nextHash)) {
-                // Cria o novo bloco e atualiza a recompensa se o halvingInterval for atingido
                 const newBlock = new Block(
                     nextIndex,
                     previousHash,
@@ -91,11 +78,11 @@ class Blockchain {
 
                 // Adiciona o novo bloco à cadeia
                 this.chain.push(newBlock);
-                this.updateTransactionIndex(transactions); // Atualiza o índice de transações
+                this.updateTransactionIndex(transactions);
 
                 return newBlock;
             }
-            nonce++; // Incrementa o nonce para a próxima tentativa
+            nonce++;
         }
     }
 
@@ -111,7 +98,7 @@ class Blockchain {
             }
             this.transactionIndex[sender].push(tx);
 
-            // Adiciona transação ao índice do destinatário (exceto a carteira de recompensa)
+            // Adiciona transação ao índice do destinatário
             if (recipient !== this.miningRewardWallet.getAddress()) {
                 if (!this.transactionIndex[recipient]) {
                     this.transactionIndex[recipient] = [];
@@ -121,7 +108,6 @@ class Blockchain {
         }
     }
 
-    // Retorna o histórico de transações de um endereço específico
     getAddressHistory(address) {
         return this.transactionIndex[address] || [];
     }
@@ -139,11 +125,11 @@ class Blockchain {
 
     // Verifica se o bloco seguinte é válido em relação ao bloco anterior
     isValidNextBlock(newBlock, previousBlock) {
-        if (previousBlock.index + 1 !== newBlock.index) return false; // Verifica o índice do bloco
-        if (previousBlock.hash !== newBlock.previousHash) return false; // Verifica o hash do bloco anterior
-        if (hashBlockData(newBlock) !== newBlock.hash) return false; // Verifica o hash do novo bloco
-        if (!this.isValidHashDifficulty(newBlock.hash)) return false; // Verifica a dificuldade
-        if (generateMerkleRoot(newBlock.transactions) !== newBlock.merkleRoot) return false; // Verifica a Merkle Root
+        if (previousBlock.index + 1 !== newBlock.index) return false;
+        if (previousBlock.hash !== newBlock.previousHash) return false;
+        if (hashBlockData(newBlock) !== newBlock.hash) return false;
+        if (!this.isValidHashDifficulty(newBlock.hash)) return false;
+        if (generateMerkleRoot(newBlock.transactions) !== newBlock.merkleRoot) return false;
         return true;
     }
 
@@ -154,15 +140,14 @@ class Blockchain {
                 if (!this.isValidNextBlock(this.chain[i], this.chain[i - 1])) {
                     return false;
                 }
-                this.chain[i].validateTransactions(); // Valida as transações do bloco
+                this.chain[i].validateTransactions();
             } catch (error) {
                 console.error(`Error validating block ${i}:`, error);
                 return false;
             }
         }
-        return true; // Retorna true se todos os blocos e transações forem válidos
+        return true;
     }
 }
 
-// Exporta a classe Blockchain para ser usada em outros módulos.
 export default Blockchain;
