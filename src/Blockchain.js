@@ -34,12 +34,8 @@ class Blockchain {
             const sender = tx.senderWallet.getAddress();
             const recipient = tx.recipient;
 
-            if (!this.balances[sender]) {
-                this.balances[sender] = 0;
-            }
-            if (!this.balances[recipient]) {
-                this.balances[recipient] = 0;
-            }
+            if (!this.balances[sender]) this.balances[sender] = 0;
+            if (!this.balances[recipient]) this.balances[recipient] = 0;
 
             this.balances[sender] -= (tx.amount + tx.fee);
             this.balances[recipient] += tx.amount;
@@ -68,16 +64,13 @@ class Blockchain {
         const nextIndex = this.latestBlock.index + 1;
         const previousHash = this.latestBlock.hash;
         let timestamp = Date.now();
-
         const totalFees = validTransactions.reduce((sum, tx) => sum + tx.fee, 0);
-
         const minerRewardTransaction = new Transaction(
             this.miningRewardWallet,
             this.miningRewardWallet.getAddress(),
             this.blockReward + totalFees,
             0
         );
-
         validTransactions.unshift(minerRewardTransaction);
 
         const merkleRoot = generateMerkleRoot(validTransactions);
@@ -133,13 +126,13 @@ class Blockchain {
         const senderBalance = this.getBalance(sender);
 
         if (senderBalance < transaction.amount + transaction.fee) {
-           console.error(`Insufficient balance`);
+            console.error(`Insufficient balance`);
             return false;
         }
 
         if (transaction.fee < 0) {
-           console.error(`Invalid transaction fee: ${transaction.fee}`);
-           return false;
+            console.error(`Invalid transaction fee: ${transaction.fee}`);
+            return false;
         }
 
         return true;
@@ -154,15 +147,11 @@ class Blockchain {
             const sender = tx.senderWallet.getAddress();
             const recipient = tx.recipient;
 
-            if (!this.transactionIndex[sender]) {
-                this.transactionIndex[sender] = [];
-            }
+            if (!this.transactionIndex[sender]) this.transactionIndex[sender] = [];
             this.transactionIndex[sender].push(tx);
 
             if (recipient !== this.miningRewardWallet.getAddress()) {
-                if (!this.transactionIndex[recipient]) {
-                    this.transactionIndex[recipient] = [];
-                }
+                if (!this.transactionIndex[recipient]) this.transactionIndex[recipient] = [];
                 this.transactionIndex[recipient].push(tx);
             }
         }
@@ -212,7 +201,7 @@ class Blockchain {
 
         for (const tx of newBlock.transactions) {
             if (!(tx instanceof Transaction) || !this.isValidTransaction(tx)) {
-                 console.error(`Invalid transaction in block`);
+                console.error(`Invalid transaction in block`);
                 return false;
             }
         }
@@ -223,9 +212,7 @@ class Blockchain {
     isValidChain() {
         for (let i = 1; i < this.chain.length; i++) {
             try {
-                if (!this.isValidNextBlock(this.chain[i], this.chain[i - 1])) {
-                    return false;
-                }
+                if (!this.isValidNextBlock(this.chain[i], this.chain[i - 1])) return false;
                 this.chain[i].validateTransactions();
             } catch (error) {
                 console.error(`Error validating block ${i}:`, error);
