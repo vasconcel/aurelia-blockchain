@@ -1,31 +1,29 @@
 {
-  "name": "aurelia-demo",
+  "name": "aurelia-network",
   "version": "1.0.0",
-  "description": "Demonstração de uma blockchain simples chamada Aurelia.",
+  "description": "A simple blockchain implementation for educational purposes.",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/devitruvius/aurelia-demo.git"
+    "test": "mocha --require test-setup.js"
   },
   "keywords": [
     "blockchain",
-    "demonstração",
-    "proof-of-work",
-    "sha256",
-    "javascript",
-    "node.js"
+    "cryptocurrency",
+    "education"
   ],
-  "author": "Gabriel Vasconcelos Andrade da Silva <gabriel.vasconcel@outlook.com>",
-  "license": "ISC",
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
-    "chalk": "^5.2.0",
+    "chalk": "^5.3.0",
     "crypto-js": "^4.2.0",
-    "ethers": "^6.13.4",
+    "ethers": "^6.11.1",
     "readline": "^1.3.0"
+  },
+  "devDependencies": {
+    "@peculiar/webcrypto": "^1.4.5",
+    "chai": "^5.1.0",
+    "mocha": "^10.3.0"
   }
 }

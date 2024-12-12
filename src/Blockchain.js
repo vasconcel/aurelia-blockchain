@@ -1,6 +1,7 @@
 import { Block, hashBlockData, generateMerkleRoot } from "./Block.js";
 import { Transaction } from "./Transaction.js";
 import { Wallet } from './Wallet.js';
+import P2PNetwork from './P2PNetwork.js';
 
 class Blockchain {
     constructor() {
@@ -8,97 +9,156 @@ class Blockchain {
         this.difficulty = 4;
         this.blockReward = 50;
         this.halvingInterval = 210000;
-        this.miningRewardWallet = new Wallet();     
+        this.miningRewardWallet = new Wallet();
         this.transactionIndex = {};
+        this.balances = {};
+        this.p2pNetwork = new P2PNetwork(this);
+        this.latestBlock = this.chain[0];
     }
 
     getBlockchain() {
         return this.chain;
     }
 
-    get latestBlock() {
-        return this.chain[this.chain.length - 1];
-    }
-
     isValidHashDifficulty(hash) {
         return hash.startsWith("0".repeat(this.difficulty));
     }
 
-    // Método assíncrono para mineração de um novo bloco
+    updateBalances(transactions) {
+        for (const tx of transactions) {
+            if (!(tx instanceof Transaction)) {
+                console.error('Invalid transaction: Transaction is not an instance of Transaction');
+                continue;
+            }
+
+            const sender = tx.senderWallet.getAddress();
+            const recipient = tx.recipient;
+
+            if (!this.balances[sender]) {
+                this.balances[sender] = 0;
+            }
+            if (!this.balances[recipient]) {
+                this.balances[recipient] = 0;
+            }
+
+            this.balances[sender] -= (tx.amount + tx.fee);
+            this.balances[recipient] += tx.amount;
+        }
+    }
+
     async mine(transactions) {
         if (!transactions || transactions.length === 0) {
-            throw new Error("No transactions to mine.");
+            console.warn("No transactions to mine.");
+            return;
         }
 
-        // Configurações iniciais do novo bloco
+        const validTransactions = transactions.filter(tx => {
+            if (!(tx instanceof Transaction) || !this.isValidTransaction(tx)) {
+                console.error("Invalid transaction found and skipped.");
+                return false;
+            }
+            return true;
+        });
+
+        if (validTransactions.length === 0) {
+            console.warn("No valid transactions to mine after filtering.");
+            return;
+        }
+
         const nextIndex = this.latestBlock.index + 1;
         const previousHash = this.latestBlock.hash;
         let timestamp = Date.now();
-        const merkleRoot = generateMerkleRoot(transactions);
-        let nonce = 0;
-        let nextHash;
 
-        // Adiciona uma transação de recompensa para o minerador
+        const totalFees = validTransactions.reduce((sum, tx) => sum + tx.fee, 0);
+
         const minerRewardTransaction = new Transaction(
             this.miningRewardWallet,
             this.miningRewardWallet.getAddress(),
-            this.blockReward
+            this.blockReward + totalFees,
+            0
         );
-        transactions.push(minerRewardTransaction);
 
-        // Loop de mineração até encontrar um hash válido
+        validTransactions.unshift(minerRewardTransaction);
+
+        const merkleRoot = generateMerkleRoot(validTransactions);
+        let nonce = 0;
+        let nextHash;
+
         while (true) {
-            timestamp = Date.now();
             nextHash = hashBlockData({
                 index: nextIndex,
                 previousHash,
                 timestamp,
-                transactions,
+                transactions: validTransactions,
                 nonce,
                 merkleRoot,
             });
 
-            // Verifica se o hash gerado atende à dificuldade, cria o novo bloco e atualiza a recompensa
             if (this.isValidHashDifficulty(nextHash)) {
                 const newBlock = new Block(
                     nextIndex,
                     previousHash,
                     timestamp,
-                    transactions,
+                    validTransactions,
                     nextHash,
                     nonce,
                     merkleRoot
                 );
 
-                // Halving da recompensa para manter a economia da rede
                 if (nextIndex % this.halvingInterval === 0) {
                     this.blockReward /= 2;
                     console.log(`\nBlock reward halved! New reward: ${this.blockReward}`);
                 }
 
-                // Adiciona o novo bloco à cadeia
-                this.chain.push(newBlock);
-                this.updateTransactionIndex(transactions);
-
+                this.addBlock(newBlock);
+                this.p2pNetwork.broadcastBlock(newBlock);
                 return newBlock;
             }
             nonce++;
         }
     }
 
-    // Atualiza o índice de transações para rastrear histórico de endereços
+    isValidTransaction(transaction) {
+        if (!transaction || typeof transaction !== 'object') {
+            console.error('Invalid transaction: Transaction is not an object');
+            return false;
+        }
+
+        if (!transaction.verifySignature()) {
+            console.error('Invalid transaction signature');
+            return false;
+        }
+
+        const sender = transaction.senderWallet.getAddress();
+        const senderBalance = this.getBalance(sender);
+
+        if (senderBalance < transaction.amount + transaction.fee) {
+           console.error(`Insufficient balance`);
+            return false;
+        }
+
+        if (transaction.fee < 0) {
+           console.error(`Invalid transaction fee: ${transaction.fee}`);
+           return false;
+        }
+
+        return true;
+    }
+
+    getBalance(address) {
+        return this.balances[address] || 0;
+    }
+
     updateTransactionIndex(transactions) {
         for (const tx of transactions) {
             const sender = tx.senderWallet.getAddress();
             const recipient = tx.recipient;
 
-            // Adiciona transação ao índice do remetente
             if (!this.transactionIndex[sender]) {
                 this.transactionIndex[sender] = [];
             }
             this.transactionIndex[sender].push(tx);
 
-            // Adiciona transação ao índice do destinatário
             if (recipient !== this.miningRewardWallet.getAddress()) {
                 if (!this.transactionIndex[recipient]) {
                     this.transactionIndex[recipient] = [];
@@ -112,28 +172,54 @@ class Blockchain {
         return this.transactionIndex[address] || [];
     }
 
-    // Adiciona um novo bloco à cadeia, se válido
     addBlock(newBlock) {
         if (!this.isValidNextBlock(newBlock, this.latestBlock)) {
             console.error("Invalid block");
             return false;
         }
         this.chain.push(newBlock);
+        this.latestBlock = newBlock;
         this.updateTransactionIndex(newBlock.transactions);
+        this.updateBalances(newBlock.transactions);
         return true;
     }
 
-    // Verifica se o bloco seguinte é válido em relação ao bloco anterior
     isValidNextBlock(newBlock, previousBlock) {
-        if (previousBlock.index + 1 !== newBlock.index) return false;
-        if (previousBlock.hash !== newBlock.previousHash) return false;
-        if (hashBlockData(newBlock) !== newBlock.hash) return false;
-        if (!this.isValidHashDifficulty(newBlock.hash)) return false;
-        if (generateMerkleRoot(newBlock.transactions) !== newBlock.merkleRoot) return false;
+        if (previousBlock.index + 1 !== newBlock.index) {
+            console.error("Invalid block index");
+            return false;
+        }
+
+        if (previousBlock.hash !== newBlock.previousHash) {
+            console.error("Invalid previous hash");
+            return false;
+        }
+
+        if (hashBlockData(newBlock) !== newBlock.hash) {
+            console.error("Invalid block hash");
+            return false;
+        }
+
+        if (!this.isValidHashDifficulty(newBlock.hash)) {
+            console.error("Invalid hash difficulty");
+            return false;
+        }
+
+        if (generateMerkleRoot(newBlock.transactions) !== newBlock.merkleRoot) {
+            console.error("Invalid merkle root");
+            return false;
+        }
+
+        for (const tx of newBlock.transactions) {
+            if (!(tx instanceof Transaction) || !this.isValidTransaction(tx)) {
+                 console.error(`Invalid transaction in block`);
+                return false;
+            }
+        }
+
         return true;
     }
 
-    // Verifica a validade de toda a cadeia de blocos
     isValidChain() {
         for (let i = 1; i < this.chain.length; i++) {
             try {

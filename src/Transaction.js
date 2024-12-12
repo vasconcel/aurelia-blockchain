@@ -1,53 +1,49 @@
 import crypto from 'crypto';
+import { Wallet } from './Wallet.js';
 
-// Classe que representa uma transação entre carteiras
 export class Transaction {
-    constructor(senderWallet, recipientAddress, amount) {
-        // Validação dos parâmetros de transação
+    constructor(senderWallet, recipientAddress, amount, fee) {
         if (!senderWallet || !recipientAddress || typeof amount !== 'number' || amount <= 0) {
             throw new Error('Invalid transaction parameters.');
         }
-
-        // Propriedades da transação
-        this.senderWallet = senderWallet; // Carteira do remetente
-        this.recipient = recipientAddress; // Endereço do destinatário
-        this.amount = amount; // Quantia a ser transferida
-        this.timestamp = Date.now(); // Data e hora da criação da transação
-        this.signature = null; // Assinatura da transação, inicialmente nula
+        if (typeof fee !== 'number' || fee < 0) {
+            throw new Error('Transaction fee must be a non-negative number.');
+        }
+        this.senderWallet = senderWallet;
+        this.recipient = recipientAddress;
+        this.amount = amount;
+        this.fee = fee;
+        this.timestamp = Date.now();
+        this.signature = null;
     }
 
-    // Calcula o hash da transação com base nos dados da transação
     calculateHash() {
-        const dataToHash = `${this.senderWallet.getPublicKey()}${this.recipient}${this.amount}${this.timestamp}`;
+        const dataToHash = `${this.senderWallet.getPublicKey()}${this.recipient}${this.amount}${this.fee}${this.timestamp}`;
         return crypto.createHash('sha256').update(dataToHash).digest('hex');
     }
 
-    // Assina a transação com a chave privada do remetente
-    signTransaction() {
-        this.signature = this.senderWallet.signTransaction(this); // A assinatura é gerada pela carteira do remetente
+    async signTransaction() {
+        this.signature = await this.senderWallet.signTransaction(this);
+        return this.signature;
     }
 
-    // Verifica a assinatura da transação para garantir sua autenticidade
     verifySignature() {
-        if (!this.signature) return false; // Retorna falso se não houver assinatura
-        return this.senderWallet.verifyTransaction(this, this.signature); // Verifica a assinatura usando a carteira do remetente
+        if (!this.signature) return false;
+        return this.senderWallet.verifyTransaction(this, this.signature);
     }
 
-    // Exibe detalhes da transação, incluindo o status da assinatura
     async displayTransaction() {
-        const signature = await this.signature; // Obtém a assinatura, se disponível
-        const signatureStatus = signature ? signature : "Not signed yet"; // Exibe o status da assinatura
-        return `Transaction Hash: ${this.calculateHash()}\nFrom: ${this.senderWallet.getAddress()}\nTo: ${this.recipient}\nAmount: ${this.amount}\nTimestamp: ${new Date(this.timestamp).toLocaleString()}\nSignature: ${signatureStatus}`;
+        const signature = await this.signature;
+        const signatureStatus = signature ? signature : "Not signed yet";
+        return `Transaction Hash: ${this.calculateHash()}\nFrom: ${this.senderWallet.getAddress()}\nTo: ${this.recipient}\nAmount: ${this.amount}\nFee: ${this.fee}\nTimestamp: ${new Date(this.timestamp).toLocaleString()}\nSignature: ${signatureStatus}`;
     }
 }
 
-// Classe para gerenciar uma lista de transações
 export class TransactionList {
     constructor() {
-        this.transactions = []; // Array que armazena as transações
+        this.transactions = [];
     }
 
-    // Adiciona uma nova transação à lista, se for uma instância válida da classe Transaction
     addTransaction(transaction) {
         if (transaction instanceof Transaction) {
             this.transactions.push(transaction);
@@ -56,12 +52,10 @@ export class TransactionList {
         }
     }
 
-    // Retorna a lista de transações armazenadas
     getTransactions() {
         return this.transactions;
     }
 
-    // Limpa a lista de transações
     clearTransactions() {
         this.transactions = [];
     }
