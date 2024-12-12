@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-const { hashMessage, recoverAddress } = ethers;
+const { recoverAddress } = ethers;
 
 class Wallet {
     constructor() {
@@ -22,17 +22,14 @@ class Wallet {
     async signTransaction(transaction) {
         const message = transaction.calculateHash();
         const messageBytes = ethers.getBytes("0x" + message);
-
         const signature = await this.wallet.signMessage(messageBytes);
-
         return signature;
     }
 
     verifyTransaction(transaction, signature) {
         const message = transaction.calculateHash();
-
         try {
-            const recoveredAddress = recoverAddress("0x" + message, signature); // Passando o hash da mensagem diretamente
+            const recoveredAddress = recoverAddress("0x" + message, signature);
             return recoveredAddress === this.getAddress();
         } catch (error) {
             console.error("Erro ao verificar a assinatura:", error);
