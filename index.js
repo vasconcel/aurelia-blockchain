@@ -1,9 +1,8 @@
 import readline from "readline";
 import chalk from "chalk";
 import Blockchain from "./src/Blockchain.js";
-import { Transaction } from "./src/Transaction.js";
-import { Wallet } from "./src/Wallet.js";
-import { displayMenu, questionAsync, handleChoice, askForValidInput } from './src/ui.js';
+import { handleChoice, displayMenu, questionAsync } from './src/ui.js';
+import { askForValidInput } from './src/helpers.js';
 
 const COLOR_SCHEME = {
     primary: chalk.cyanBright,
@@ -25,7 +24,7 @@ const blockchain = new Blockchain();
 
 async function addTransaction() {
     try {
-        const senderWallet = new Wallet();
+        const senderWallet = blockchain.miningRewardWallet;
         const recipientAddress = await askForValidInput(
             "Enter the recipient's address (0x...): ",
             (input) => input.startsWith('0x')
@@ -82,3 +81,5 @@ function exitApplication() {
 
 console.log(COLOR_SCHEME.primary("\nWelcome to the Aurelia Network!\n"));
 displayMenu();
+
+export { COLOR_SCHEME, rl, addTransaction, viewBlockchain, viewAddressHistory, exitApplication };
