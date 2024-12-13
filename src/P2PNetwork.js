@@ -21,9 +21,15 @@ class P2PNetwork {
     }
 
     onTransactionReceived(transaction) {
-        this.transactionPool.push(transaction);
-        if (this.transactionPool.length >= 2) {
-            this.mineBlockWithTransactions();
+        console.log("Transação recebida. Validando...");
+        if (this.blockchain.isValidTransaction(transaction)) {
+            console.log("Transação válida. Adicionando ao pool...");
+            this.transactionPool.push(transaction);
+            if (this.transactionPool.length >= 2) {
+                this.mineBlockWithTransactions();
+            }
+        } else {
+            console.error("Transação inválida recebida. Descartando...");
         }
     }
 
