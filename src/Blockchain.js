@@ -37,8 +37,12 @@ class Blockchain {
             if (!this.balances[sender]) this.balances[sender] = 0;
             if (!this.balances[recipient]) this.balances[recipient] = 0;
 
-            this.balances[sender] -= (tx.amount + tx.fee);
-            this.balances[recipient] += tx.amount;
+            if (sender === this.miningRewardWallet.getAddress()) {
+                this.balances[recipient] += (tx.amount + tx.fee);
+            } else {
+                this.balances[sender] -= (tx.amount + tx.fee);
+                this.balances[recipient] += tx.amount;
+            }
         }
     }
 
@@ -71,7 +75,12 @@ class Blockchain {
             this.blockReward + totalFees,
             0
         );
+
+        await minerRewardTransaction.signTransaction();
+
         validTransactions.unshift(minerRewardTransaction);
+
+        console.log("Transações no bloco (após adicionar recompensa do minerador):", validTransactions);
 
         const merkleRoot = generateMerkleRoot(validTransactions);
         let nonce = 0;
@@ -103,6 +112,7 @@ class Blockchain {
                     console.log(`\nBlock reward halved! New reward: ${this.blockReward}`);
                 }
 
+                this.updateBalances(newBlock.transactions);
                 this.addBlock(newBlock);
                 this.p2pNetwork.broadcastBlock(newBlock);
                 return newBlock;
@@ -169,7 +179,6 @@ class Blockchain {
         this.chain.push(newBlock);
         this.latestBlock = newBlock;
         this.updateTransactionIndex(newBlock.transactions);
-        this.updateBalances(newBlock.transactions);
         return true;
     }
 
