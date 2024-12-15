@@ -1,7 +1,7 @@
 import readline from "readline";
 import chalk from "chalk";
 import Blockchain from "./src/Blockchain.js";
-import { handleChoice, displayMenu, questionAsync } from './src/ui.js';
+import { displayMenu, questionAsync } from './src/ui.js';
 import { askForValidInput } from './src/helpers.js';
 
 const COLOR_SCHEME = {
