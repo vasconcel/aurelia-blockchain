@@ -41,6 +41,18 @@ Durante o desenvolvimento da Aurelia Network, alguns desafios técnicos foram en
 *   **Assinatura de Transações:** Dificuldades iniciais no uso da biblioteca `ethers` para assinar transações foram superadas através da compreensão do fluxo de promises e do tratamento adequado dos tipos de dados.
 *   **Ambiente de Testes:** A necessidade de simular um ambiente de navegador para os testes foi resolvida com a utilização das ferramentas `browserify` e `@peculiar/webcrypto`.
 *   **Lógica de Mineração e Validação:** A lógica de mineração e validação de blocos foi refatorada e otimizada com o auxílio do modelo Gemini, resultando em um código mais limpo e eficiente.
+*   **Duplicação de Inputs no CLI:** A duplicação de inputs no CLI foi corrigida centralizando a criação da instância do `readline` em `index.js` e passando-a como parâmetro para as funções em `ui.js`.
+
+## Próximos Passos
+
+O projeto Aurelia Network, em seu estado atual, fornece uma simulação funcional dos principais aspectos de uma blockchain. No entanto, existem diversas oportunidades de expansão e aprimoramento. Dentre elas, destacam-se:
+
+*   **Interface Gráfica (Frontend):** O desenvolvimento de uma interface gráfica amigável, utilizando tecnologias web como React ou Vue.js, tornaria a interação com a Aurelia Network mais intuitiva e acessível para os usuários. Isso permitiria a visualização da blockchain em tempo real, a criação e o envio de transações de forma simplificada, além do acompanhamento do saldo das carteiras.
+*   **CLI Robusto:** Aprimorar a interface de linha de comando (CLI) atual para suportar uma gama maior de comandos e opções. Isso poderia incluir comandos para gerenciar carteiras, interagir com contratos inteligentes (caso sejam implementados) e obter informações detalhadas sobre a rede e suas transações. Um framework como o Commander.js ou o Yargs poderia ser usado para facilitar o desenvolvimento de um CLI mais robusto.
+*   **Implementação de Contratos Inteligentes:** Adicionar a funcionalidade de contratos inteligentes à Aurelia Network, permitindo a criação e execução de código autoexecutável na blockchain. Isso abriria um leque de possibilidades para a criação de aplicações descentralizadas (dApps) na plataforma.
+*   **Mecanismo de Consenso Avançado:** Explorar e implementar mecanismos de consenso mais complexos e eficientes, como Proof-of-Stake (PoS) ou Delegated Proof-of-Stake (DPoS), como alternativa ao Proof-of-Work (PoW) atualmente simulado.
+*   **Aprimoramento da Simulação P2P:** Tornar a simulação da rede P2P mais realista, introduzindo elementos como latência de rede, nós maliciosos e falhas de comunicação.
+*   **Integração com o Real Digital:** Explorar a integração da Aurelia Network com o Real Digital, a moeda digital do Banco Central do Brasil, criando uma ponte entre a simulação e o ecossistema financeiro real.
 
 ## Conclusão
 
@@ -48,4 +60,4 @@ O projeto Aurelia Network tem como objetivo simular os principais componentes de
 
 A colaboração com o modelo de linguagem Gemini foi um fator crucial para o sucesso do projeto. O modelo forneceu suporte técnico, acelerando o desenvolvimento e contribuindo para a qualidade das implementações.
 
-Em resumo, a Aurelia Network representa uma simulação funcional de uma blockchain, construída com base nos requisitos do projeto de estágio em AWS Blockchain e Real Digital. O projeto serve como uma base para a compreensão prática dos mecanismos de uma blockchain.
+Em resumo, a Aurelia Network representa uma simulação funcional de uma blockchain, construída com base nos requisitos do projeto de estágio em AWS Blockchain e Real Digital. O projeto serve como uma base para a compreensão prática dos mecanismos de uma blockchain e abre caminho para futuras expansões e aprimoramentos.
