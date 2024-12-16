@@ -1,10 +1,10 @@
 import { questionAsync } from './ui.js';
 import { COLOR_SCHEME } from '../index.js';
 
-export async function askForValidInput(prompt, validationFn) {
+export async function askForValidInput(rl, prompt, validationFn) {
     let input;
     while (true) {
-        input = await questionAsync(COLOR_SCHEME.primary(prompt));
+        input = await questionAsync(rl, COLOR_SCHEME.primary(prompt));
         if (validationFn(input)) {
             return input;
         } else {

@@ -3,6 +3,7 @@ import chalk from "chalk";
 import Blockchain from "./src/Blockchain.js";
 import { displayMenu, questionAsync } from './src/ui.js';
 import { askForValidInput } from './src/helpers.js';
+import { Transaction } from './src/Transaction.js';
 
 const COLOR_SCHEME = {
     primary: chalk.cyanBright,
@@ -22,26 +23,29 @@ const rl = readline.createInterface({
 
 const blockchain = new Blockchain();
 
-async function addTransaction() {
+async function addTransaction(rl) {
     try {
         const senderWallet = blockchain.miningRewardWallet;
         const recipientAddress = await askForValidInput(
+            rl,
             "Enter the recipient's address (0x...): ",
             (input) => input.startsWith('0x')
         );
 
         const amount = await askForValidInput(
+            rl,
             "Enter the amount to send: ",
             (input) => !isNaN(input) && parseFloat(input) > 0
         );
 
         const fee = await askForValidInput(
+            rl,
             "Enter the transaction fee: ",
             (input) => !isNaN(input) && parseFloat(input) >= 0
         );
 
         const transaction = new Transaction(senderWallet, recipientAddress, parseFloat(amount), parseFloat(fee));
-        transaction.signTransaction();
+        await transaction.signTransaction();
 
         blockchain.p2pNetwork.broadcastTransaction(transaction);
         console.log(COLOR_SCHEME.success("Transaction broadcasted successfully!\n"));
@@ -49,17 +53,17 @@ async function addTransaction() {
         console.error(COLOR_SCHEME.error("Error adding transaction:", error));
     }
 
-    displayMenu();
+    displayMenu(rl);
 }
 
 function viewBlockchain() {
     console.log(COLOR_SCHEME.secondary("\nViewing Blockchain...\n"));
     blockchain.getBlockchain().forEach((block) => console.log(JSON.stringify(block, null, 2)));
-    displayMenu();
+    displayMenu(rl);
 }
 
-async function viewAddressHistory() {
-    const address = await questionAsync(COLOR_SCHEME.primary("Enter the address (0x...): "));
+async function viewAddressHistory(rl) {
+    const address = await questionAsync(rl, COLOR_SCHEME.primary("Enter the address (0x...): "));
     const history = blockchain.getAddressHistory(address);
 
     if (history.length === 0) {
@@ -71,7 +75,7 @@ async function viewAddressHistory() {
             console.log(`${COLOR_SCHEME.primary(`Transaction:`)}\n${displayTx}\n`);
         }
     }
-    displayMenu();
+    displayMenu(rl);
 }
 
 function exitApplication() {
@@ -80,6 +84,6 @@ function exitApplication() {
 }
 
 console.log(COLOR_SCHEME.primary("\nWelcome to the Aurelia Network!\n"));
-displayMenu();
+displayMenu(rl);
 
 export { COLOR_SCHEME, rl, addTransaction, viewBlockchain, viewAddressHistory, exitApplication };
