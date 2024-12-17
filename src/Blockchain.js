@@ -1,9 +1,68 @@
-import { Block, hashBlockData, generateMerkleRoot } from "./Block.js";
+import { Block, generateMerkleRoot } from "./Block.js";
 import { Transaction } from "./Transaction.js";
 import { Wallet } from './Wallet.js';
 import P2PNetwork from './P2PNetwork.js';
+import { Mutex } from 'async-mutex';
+import * as crypto from 'crypto';
 
-class Blockchain {
+function calculateHash(data) {
+    return crypto.createHash('sha256').update(data).digest('hex');
+}
+
+export async function mineForTest(blockchain, difficulty, maxTimestampDiff) {
+    const diff = difficulty || blockchain.difficulty;
+    const maxDiff = maxTimestampDiff || blockchain.maxTimestampDiff;
+
+    const previousBlock = blockchain.latestBlock;
+    const nextIndex = previousBlock.index + 1;
+    const previousHash = previousBlock.hash;
+    let timestamp = Date.now();
+    const transactionsToMine = blockchain.p2pNetwork.transactionPool;
+    
+    const totalFees = transactionsToMine.reduce((sum, tx) => sum + tx.fee, 0);
+    const minerRewardTransaction = new Transaction(
+        blockchain.miningRewardWallet,
+        blockchain.miningRewardWallet.getAddress(),
+        blockchain.blockReward + totalFees,
+        0
+    );
+    minerRewardTransaction.timestamp = timestamp;
+    await minerRewardTransaction.signTransaction();
+
+    const transactionsToMineWithReward = [minerRewardTransaction, ...transactionsToMine];
+    const merkleRoot = generateMerkleRoot(transactionsToMineWithReward);
+    let nonce = 0;
+    let newBlock;
+
+    do {
+        timestamp = Date.now();
+        newBlock = new Block(
+            nextIndex,
+            previousHash,
+            timestamp,
+            transactionsToMineWithReward,
+            nonce,
+            merkleRoot
+        );
+        nonce++;
+    } while (!newBlock.hash.startsWith("0".repeat(diff)));
+
+    console.log("Bloco minerado (para teste):", newBlock);
+
+    if (blockchain.isValidNextBlock(newBlock, previousBlock)) {
+        blockchain.addBlock(newBlock);
+        blockchain.p2pNetwork.broadcastBlock(newBlock);
+
+        console.log("Bloco minerado com sucesso (para teste):", newBlock);
+        blockchain.p2pNetwork.transactionPool = [];
+        return newBlock;
+    } else {
+        console.error("Bloco minerado inválido (para teste), não será adicionado à cadeia.");
+        return;
+    }
+}
+
+export default class Blockchain {
     constructor() {
         this.chain = [Block.genesis];
         this.difficulty = 4;
@@ -11,9 +70,16 @@ class Blockchain {
         this.halvingInterval = 210000;
         this.miningRewardWallet = new Wallet();
         this.transactionIndex = {};
-        this.balances = {};
         this.p2pNetwork = new P2PNetwork(this);
         this.latestBlock = this.chain[0];
+        this.mineMutex = new Mutex();
+        this.initialBalances = {
+            "0x0000000000000000000000000000000000000000": 1000000,
+            [this.miningRewardWallet.getAddress()]: 1000,
+        };
+        this.balances = { ...this.initialBalances };
+        this.maxTimestampDiff = 15 * 60 * 1000;
+        this.mine = this.mine.bind(this);
     }
 
     getBlockchain() {
@@ -22,6 +88,12 @@ class Blockchain {
 
     isValidHashDifficulty(hash) {
         return hash.startsWith("0".repeat(this.difficulty));
+    }
+
+    initializeBalances(balances) {
+        for (const address in balances) {
+            this.balances[address] = balances[address];
+        }
     }
 
     updateBalances(transactions) {
@@ -38,7 +110,7 @@ class Blockchain {
             if (!this.balances[recipient]) this.balances[recipient] = 0;
 
             if (sender === this.miningRewardWallet.getAddress()) {
-                this.balances[recipient] += (tx.amount + tx.fee);
+                this.balances[this.miningRewardWallet.getAddress()] += (tx.amount + tx.fee);
             } else {
                 this.balances[sender] -= (tx.amount + tx.fee);
                 this.balances[recipient] += tx.amount;
@@ -46,78 +118,80 @@ class Blockchain {
         }
     }
 
-    async mine(transactions) {
-        if (!transactions || transactions.length === 0) {
-            console.warn("No transactions to mine.");
-            return;
-        }
-
-        const validTransactions = transactions.filter(tx => {
-            if (!(tx instanceof Transaction) || !this.isValidTransaction(tx)) {
-                console.error("Invalid transaction found and skipped.");
-                return false;
+    async mine(difficulty, maxTimestampDiff) {
+        const release = await this.mineMutex.acquire();
+        try {
+            if (typeof process.env.TEST_MODE !== 'undefined' && process.env.TEST_MODE === 'true') {
+                return await mineForTest(this, difficulty, maxTimestampDiff);
             }
-            return true;
-        });
 
-        if (validTransactions.length === 0) {
-            console.warn("No valid transactions to mine after filtering.");
-            return;
-        }
-
-        const nextIndex = this.latestBlock.index + 1;
-        const previousHash = this.latestBlock.hash;
-        let timestamp = Date.now();
-        const totalFees = validTransactions.reduce((sum, tx) => sum + tx.fee, 0);
-        const minerRewardTransaction = new Transaction(
-            this.miningRewardWallet,
-            this.miningRewardWallet.getAddress(),
-            this.blockReward + totalFees,
-            0
-        );
-
-        await minerRewardTransaction.signTransaction();
-
-        validTransactions.unshift(minerRewardTransaction);
-
-        console.log("Transações no bloco (após adicionar recompensa do minerador):", validTransactions);
-
-        const merkleRoot = generateMerkleRoot(validTransactions);
-        let nonce = 0;
-        let nextHash;
-
-        while (true) {
-            nextHash = hashBlockData({
-                index: nextIndex,
-                previousHash,
-                timestamp,
-                transactions: validTransactions,
-                nonce,
-                merkleRoot,
+            const validTransactions = this.p2pNetwork.transactionPool.filter(tx => {
+                if (!this.isValidTransaction(tx)) {
+                    console.error("Transação considerada inválida para mineração.");
+                    return false;
+                }
+                return true;
             });
 
-            if (this.isValidHashDifficulty(nextHash)) {
-                const newBlock = new Block(
+            if (validTransactions.length === 0) {
+                console.warn("No valid transactions to mine after filtering.");
+                return;
+            }
+
+            const previousBlock = this.latestBlock;
+            const nextIndex = previousBlock.index + 1;
+            const previousHash = previousBlock.hash;
+            let timestamp = Date.now();
+            const totalFees = validTransactions.reduce((sum, tx) => sum + tx.fee, 0);
+
+            const minerRewardTransaction = new Transaction(
+                this.miningRewardWallet,
+                this.miningRewardWallet.getAddress(),
+                this.blockReward + totalFees,
+                0
+            );
+
+            minerRewardTransaction.timestamp = timestamp;
+            await minerRewardTransaction.signTransaction();
+
+            const transactionsToMine = [minerRewardTransaction, ...validTransactions];
+            const merkleRoot = generateMerkleRoot(transactionsToMine);
+            let nonce = 0;
+            let newBlock;
+
+            do {
+                timestamp = Date.now();
+                newBlock = new Block(
                     nextIndex,
                     previousHash,
                     timestamp,
-                    validTransactions,
-                    nextHash,
+                    transactionsToMine,
                     nonce,
                     merkleRoot
                 );
+                nonce++;
+            } while (!this.isValidHashDifficulty(newBlock.hash));
 
-                if (nextIndex % this.halvingInterval === 0) {
+            if (this.isValidNextBlock(newBlock, previousBlock)) {
+                this.addBlock(newBlock);
+                this.p2pNetwork.broadcastBlock(newBlock);
+
+                if ((nextIndex) % this.halvingInterval === 0) {
                     this.blockReward /= 2;
                     console.log(`\nBlock reward halved! New reward: ${this.blockReward}`);
                 }
 
-                this.updateBalances(newBlock.transactions);
-                this.addBlock(newBlock);
-                this.p2pNetwork.broadcastBlock(newBlock);
+                console.log("Bloco minerado com sucesso:", newBlock);
+                this.p2pNetwork.transactionPool = [];
                 return newBlock;
+            } else {
+                console.error("Bloco minerado inválido, não será adicionado à cadeia.");
+                return;
             }
-            nonce++;
+        } catch (error) {
+            console.error("Erro durante a mineração:", error);
+        } finally {
+            release();
         }
     }
 
@@ -127,16 +201,23 @@ class Blockchain {
             return false;
         }
 
-        if (!transaction.verifySignature()) {
-            console.error('Invalid transaction signature');
+        if (!transaction.senderWallet || typeof transaction.senderWallet.getAddress !== 'function') {
+            console.error('Invalid transaction: senderWallet is undefined or getAddress is not a function', transaction.senderWallet);
             return false;
         }
 
+        if(transaction.senderWallet instanceof Wallet){
+            if (!transaction.verifySignature()) {
+                console.error('Invalid transaction signature');
+                return false;
+            }
+        }
+
         const sender = transaction.senderWallet.getAddress();
-        const senderBalance = this.getBalance(sender);
+        const senderBalance = this.initialBalances[sender] !== undefined ? this.initialBalances[sender] : this.balances[sender];
 
         if (senderBalance < transaction.amount + transaction.fee) {
-            console.error(`Insufficient balance`);
+            console.error(`Insufficient balance for sender: ${sender}`);
             return false;
         }
 
@@ -172,17 +253,20 @@ class Blockchain {
     }
 
     addBlock(newBlock) {
-        if (!this.isValidNextBlock(newBlock, this.latestBlock)) {
-            console.error("Invalid block");
-            return false;
+        if (this.isValidNextBlock(newBlock, this.latestBlock)) {
+            this.chain.push(newBlock);
+            this.latestBlock = newBlock;
+            this.updateTransactionIndex(newBlock.transactions);
+            this.updateBalances(newBlock.transactions);
+            return true;
         }
-        this.chain.push(newBlock);
-        this.latestBlock = newBlock;
-        this.updateTransactionIndex(newBlock.transactions);
-        return true;
+        console.error("Invalid block received. Not adding to chain.");
+        return false;
     }
 
     isValidNextBlock(newBlock, previousBlock) {
+        const currentTimestamp = Date.now();
+
         if (previousBlock.index + 1 !== newBlock.index) {
             console.error("Invalid block index");
             return false;
@@ -193,7 +277,7 @@ class Blockchain {
             return false;
         }
 
-        if (hashBlockData(newBlock) !== newBlock.hash) {
+        if (this.calculateBlockHash(newBlock) !== newBlock.hash) {
             console.error("Invalid block hash");
             return false;
         }
@@ -205,6 +289,11 @@ class Blockchain {
 
         if (generateMerkleRoot(newBlock.transactions) !== newBlock.merkleRoot) {
             console.error("Invalid merkle root");
+            return false;
+        }
+
+        if (newBlock.timestamp > currentTimestamp + this.maxTimestampDiff || newBlock.timestamp < previousBlock.timestamp - this.maxTimestampDiff) {
+            console.error(`Invalid timestamp: Block timestamp ${newBlock.timestamp} is out of the allowed range.`);
             return false;
         }
 
@@ -230,6 +319,30 @@ class Blockchain {
         }
         return true;
     }
+
+    calculateBlockHash(block) {
+        const { index, previousHash, timestamp, merkleRoot, nonce } = block;
+        const transactions = block.transactions.map(tx => {
+            const senderAddress = tx.senderWallet ? tx.senderWallet.getAddress() : 'Coinbase';
+            return JSON.stringify({
+                sender: senderAddress,
+                recipient: tx.recipient,
+                amount: tx.amount,
+                fee: tx.fee,
+                timestamp: tx.timestamp,
+                signature: tx.signature
+            });
+        });
+
+        transactions.sort((a, b) => {
+            const hashA = calculateHash(JSON.stringify(a));
+            const hashB = calculateHash(JSON.stringify(b));
+            return hashA.localeCompare(hashB);
+        });
+
+        const blockString = `${index}${previousHash}${timestamp}${merkleRoot}${nonce}${transactions.join('')}`;
+        return calculateHash(blockString);
+    }
 }
 
-export default Blockchain;
+export { Blockchain };

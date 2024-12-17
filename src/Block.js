@@ -1,12 +1,6 @@
 import crypto from "crypto";
 import sha256 from 'crypto-js/sha256.js';
 
-function hashBlockData(block) {
-    const { index, previousHash, timestamp, merkleRoot, nonce } = block;
-    const data = JSON.stringify({ index, previousHash, timestamp, merkleRoot, nonce });
-    return crypto.createHash("sha256").update(data).digest("hex");
-}
-
 function generateMerkleRoot(transactions) {
     if (!transactions || transactions.length === 0) return null;
 
@@ -24,22 +18,45 @@ function generateMerkleRoot(transactions) {
 }
 
 class Block {
-    constructor(index, previousHash, timestamp, transactions, hash, nonce, merkleRoot) {
+    constructor(index, previousHash, timestamp, transactions, nonce, merkleRoot) {
         this.index = index;
         this.previousHash = previousHash;
         this.timestamp = timestamp;
         this.transactions = transactions;
-        this.hash = hash;
         this.nonce = nonce;
         this.merkleRoot = merkleRoot;
+        this.hash = this.calculateBlockHash();
     }
 
     static get genesis() {
         const genesisTransactions = [];
         const genesisMerkleRoot = generateMerkleRoot(genesisTransactions);
-        const genesisBlock = new Block(0, "0", 1678886400000, genesisTransactions, null, 0, genesisMerkleRoot);
-        genesisBlock.hash = hashBlockData(genesisBlock);
+        const genesisBlock = new Block(0, "0", 1678886400000, genesisTransactions, 0, genesisMerkleRoot);
         return genesisBlock;
+    }
+
+    calculateBlockHash() {
+        const { index, previousHash, timestamp, merkleRoot, nonce } = this;
+        const transactions = this.transactions.map(tx => {
+            const senderAddress = tx.senderWallet ? tx.senderWallet.getAddress() : 'Coinbase';
+            return JSON.stringify({
+                sender: senderAddress,
+                recipient: tx.recipient,
+                amount: tx.amount,
+                fee: tx.fee,
+                timestamp: tx.timestamp,
+                signature: tx.signature
+            });
+        });
+
+        transactions.sort((a, b) => {
+            const hashA = crypto.createHash('sha256').update(JSON.stringify(a)).digest('hex');
+            const hashB = crypto.createHash('sha256').update(JSON.stringify(b)).digest('hex');
+            return hashA.localeCompare(hashB);
+        });
+
+        const blockString = `${index}${previousHash}${timestamp}${merkleRoot}${nonce}${transactions.join('')}`;
+        return crypto.createHash('sha256').update(blockString).digest('hex');
     }
 
     validateTransactions() {
@@ -55,4 +72,4 @@ class Block {
     }
 }
 
-export { Block, hashBlockData, generateMerkleRoot };
+export { Block, generateMerkleRoot };

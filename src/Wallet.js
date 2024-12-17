@@ -1,9 +1,12 @@
 import { ethers } from 'ethers';
-const { hashMessage, verifyMessage } = ethers;
 
 class Wallet {
-    constructor() {
-        this.wallet = ethers.Wallet.createRandom();
+    constructor(privateKey = null) {
+        if (privateKey) {
+            this.wallet = new ethers.Wallet(privateKey);
+        } else {
+            this.wallet = ethers.Wallet.createRandom();
+        }
     }
 
     getAddress() {
@@ -20,18 +23,14 @@ class Wallet {
 
     async signTransaction(transaction) {
         const message = transaction.calculateHash();
-        const messageBytes = ethers.getBytes("0x" + message);
-        const prefixedMessage = hashMessage(messageBytes);
-        const signature = await this.wallet.signMessage(messageBytes);
+        const signature = await this.wallet.signMessage(message);
         return signature;
     }
 
     verifyTransaction(transaction, signature) {
         const message = transaction.calculateHash();
-        const messageBytes = ethers.getBytes("0x" + message);
-        const prefixedMessage = hashMessage(messageBytes);
         try {
-            const recoveredAddress = verifyMessage(messageBytes, signature);
+            const recoveredAddress = ethers.verifyMessage(message, signature);
             return recoveredAddress === this.getAddress();
         } catch (error) {
             console.error("Erro ao verificar a assinatura:", error);

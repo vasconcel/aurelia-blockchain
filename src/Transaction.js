@@ -17,7 +17,7 @@ class Transaction {
     }
 
     calculateHash() {
-        const dataToHash = `${this.senderWallet.getPublicKey()}${this.recipient}${this.amount}${this.fee}${this.timestamp}`;
+        const dataToHash = `${this.senderWallet.getAddress()}${this.recipient}${this.amount}${this.fee}${this.timestamp}`;
         return crypto.createHash('sha256').update(dataToHash).digest('hex');
     }
 
