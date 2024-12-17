@@ -2,7 +2,7 @@
 
 ## Objetivo
 
-Este projeto é uma implementação didática e **simulada** de uma blockchain básica, denominada Aurelia Network, criada como parte de uma atividade do programa de bolsas em **AWS Blockchain** e **Real Digital** pelo Compass UOL. O objetivo principal é demonstrar os conceitos fundamentais de uma blockchain **Proof-of-Work (PoW)** de forma acessível e prática, incluindo a mineração de blocos com um sistema PoW simplificado, a gestão de transações, a resolução de conflitos (forks) e a verificação da integridade da cadeia. **Importante ressaltar que a rede P2P é simulada e não utiliza WebSockets reais, focando no aprendizado dos conceitos de blockchain.**
+Este projeto é uma implementação didática e **simulada** de uma blockchain básica, denominada Aurelia Network, criada como parte de uma atividade do programa de bolsas em **AWS Blockchain** e **Real Digital** pelo Compass UOL. O objetivo principal é demonstrar os conceitos fundamentais de uma blockchain básica de forma acessível e prática, incluindo a mineração de blocos com um sistema Proof-of-Work (PoW) simplificado, a gestão de transações, a resolução de conflitos (forks) e a verificação da integridade da cadeia.
 
 ## Funcionalidades
 
