@@ -1,5 +1,6 @@
 import { COLOR_SCHEME, addTransaction, viewBlockchain, viewAddressHistory, exitApplication, mine } from '../index.js';
 
+// Retorna uma promise que resolve para os inputs no console.
 export function questionAsync(rl, prompt) {
     return new Promise((resolve) => {
         rl.question(prompt, resolve);

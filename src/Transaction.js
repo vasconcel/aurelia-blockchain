@@ -31,6 +31,7 @@ class Transaction {
         return this.senderWallet.verifyTransaction(this, this.signature);
     }
 
+    // Retorna uma representação legível da transação.
     async displayTransaction() {
         const signature = await this.signature;
         const signatureStatus = signature ? signature : "Not signed yet";

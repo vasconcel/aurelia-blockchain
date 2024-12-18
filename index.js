@@ -5,6 +5,7 @@ import { displayMenu, questionAsync } from './src/ui.js';
 import { askForValidInput } from './src/helpers.js';
 import { Transaction } from "./src/Transaction.js";
 
+// Esquema de cores para saída no console.
 const COLOR_SCHEME = {
     primary: chalk.cyanBright,
     secondary: chalk.blue,
@@ -16,6 +17,7 @@ const COLOR_SCHEME = {
     accent: chalk.rgb(255, 127, 80),
 };
 
+// Interface readline para inputs/outputs do console.
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,

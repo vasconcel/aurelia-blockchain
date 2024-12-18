@@ -1,10 +1,14 @@
 import crypto from "crypto";
 import sha256 from 'crypto-js/sha256.js';
 
+// Merkle Root de um conjunto de transações.
 function generateMerkleRoot(transactions) {
     if (!transactions || transactions.length === 0) return null;
 
+    // Converte as transações em hashes SHA256.
     let hashes = transactions.map(tx => sha256(JSON.stringify(tx)).toString());
+
+    // Constrói a Merkle Tree até que reste apenas um hash.
     while (hashes.length > 1) {
         const newHashes = [];
         for (let i = 0; i < hashes.length; i += 2) {
@@ -28,6 +32,7 @@ class Block {
         this.hash = this.calculateBlockHash();
     }
 
+    // Bloco Gênesis estático.
     static get genesis() {
         const genesisTransactions = [];
         const genesisMerkleRoot = generateMerkleRoot(genesisTransactions);
@@ -49,16 +54,19 @@ class Block {
             });
         });
 
+        // Ordena as transações para consistência.
         transactions.sort((a, b) => {
             const hashA = crypto.createHash('sha256').update(JSON.stringify(a)).digest('hex');
             const hashB = crypto.createHash('sha256').update(JSON.stringify(b)).digest('hex');
             return hashA.localeCompare(hashB);
         });
 
+        // Dados concatenados em string e retornados em hash SHA256.
         const blockString = `${index}${previousHash}${timestamp}${merkleRoot}${nonce}${transactions.join('')}`;
         return crypto.createHash('sha256').update(blockString).digest('hex');
     }
 
+    // Verifica as assinaturas.
     validateTransactions() {
         for (const tx of this.transactions) {
             if (!tx.verifySignature()) {

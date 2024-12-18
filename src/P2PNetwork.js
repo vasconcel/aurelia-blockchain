@@ -1,6 +1,3 @@
-import { Transaction } from './Transaction.js';
-import { Wallet } from './Wallet.js';
-
 class P2PNetwork {
     constructor(blockchain, nodes = []) {
         this.blockchain = blockchain;
@@ -24,6 +21,7 @@ class P2PNetwork {
         this.nodes.forEach(node => node.onBlockReceived(block));
     }
 
+    // Manipula o recebimento de uma transação, valida e adiciona ao pool. 
     async onTransactionReceived(transaction, node) {
         console.log(`Nó ${node.blockchain.id || 'principal'} - Transação recebida. Validando...`);
         if (node.blockchain.isValidTransaction(transaction)) {
@@ -34,6 +32,7 @@ class P2PNetwork {
         }
     }
 
+    // Manipula o recebimento de um bloco, valida e o adiciona à cadeia.
     async onBlockReceived(block) {
         console.log(`Nó ${this.blockchain.id || 'principal'} - onBlockReceived - Bloco recebido:`, block);
         if (!block || block.hash === undefined) {
@@ -68,6 +67,7 @@ class P2PNetwork {
         }
     }
 
+    // Resolve forks na blockchain com os nós e adota a cadeia mais longa.
     async resolveFork(forkedBlockchain) {
         for (const node of this.nodes) {
             const theirLatestBlock = await node.requestBlockchain();
@@ -94,6 +94,7 @@ class P2PNetwork {
         console.warn("Fork resolution failed. Staying with current chain.");
     }
 
+    // Se houver uma blockchain bifurcada, solicita os blocos ausentes e os adiciona.
     async requestMissingBlocks(startIndex, endIndex, forkedBlockchain) {
         console.warn(`Blocos faltando de ${startIndex} a ${endIndex}. Solicitando...`);
         if (forkedBlockchain) {
@@ -107,6 +108,7 @@ class P2PNetwork {
         }
     }
 
+    // Solicita a blockchain atual de outros nós. (Atualmente não implementado, retorna null)
     async requestBlockchain() {
         return null;
     }

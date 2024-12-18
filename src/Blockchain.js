@@ -9,9 +9,9 @@ function calculateHash(data) {
     return crypto.createHash('sha256').update(data).digest('hex');
 }
 
+// Função auxiliar para mineração em ambiente de teste.
 export async function mineForTest(blockchain, difficulty, maxTimestampDiff) {
     const diff = difficulty || blockchain.difficulty;
-    const maxDiff = maxTimestampDiff || blockchain.maxTimestampDiff;
 
     const previousBlock = blockchain.latestBlock;
     const nextIndex = previousBlock.index + 1;
@@ -20,6 +20,8 @@ export async function mineForTest(blockchain, difficulty, maxTimestampDiff) {
     const transactionsToMine = blockchain.p2pNetwork.transactionPool;
     
     const totalFees = transactionsToMine.reduce((sum, tx) => sum + tx.fee, 0);
+
+    // Transação de recompensa do minerador.
     const minerRewardTransaction = new Transaction(
         blockchain.miningRewardWallet,
         blockchain.miningRewardWallet.getAddress(),
@@ -34,6 +36,7 @@ export async function mineForTest(blockchain, difficulty, maxTimestampDiff) {
     let nonce = 0;
     let newBlock;
 
+    // Loop de mineração.
     do {
         timestamp = Date.now();
         newBlock = new Block(
@@ -49,6 +52,7 @@ export async function mineForTest(blockchain, difficulty, maxTimestampDiff) {
 
     console.log("Bloco minerado (para teste):", newBlock);
 
+    // Valida e adiciona o novo bloco à blockchain.
     if (blockchain.isValidNextBlock(newBlock, previousBlock)) {
         blockchain.addBlock(newBlock);
         blockchain.p2pNetwork.broadcastBlock(newBlock);
@@ -118,13 +122,16 @@ export default class Blockchain {
         }
     }
 
+    // Função principal para mineração de blocos.
     async mine(difficulty, maxTimestampDiff) {
         const release = await this.mineMutex.acquire();
         try {
+            // Verifica se está em modo de teste e chama a função apropriada.
             if (typeof process.env.TEST_MODE !== 'undefined' && process.env.TEST_MODE === 'true') {
                 return await mineForTest(this, difficulty, maxTimestampDiff);
             }
 
+            // Filtra as transações válidas do pool.
             const validTransactions = this.p2pNetwork.transactionPool.filter(tx => {
                 if (!this.isValidTransaction(tx)) {
                     console.error("Transação considerada inválida para mineração.");
@@ -144,6 +151,7 @@ export default class Blockchain {
             let timestamp = Date.now();
             const totalFees = validTransactions.reduce((sum, tx) => sum + tx.fee, 0);
 
+            // Cria a transação de recompensa do minerador.
             const minerRewardTransaction = new Transaction(
                 this.miningRewardWallet,
                 this.miningRewardWallet.getAddress(),
@@ -154,11 +162,13 @@ export default class Blockchain {
             minerRewardTransaction.timestamp = timestamp;
             await minerRewardTransaction.signTransaction();
 
+            // Combina a transação de recompensa com as transações válidas.
             const transactionsToMine = [minerRewardTransaction, ...validTransactions];
             const merkleRoot = generateMerkleRoot(transactionsToMine);
             let nonce = 0;
             let newBlock;
 
+            // Loop de mineração.
             do {
                 timestamp = Date.now();
                 newBlock = new Block(
@@ -176,6 +186,7 @@ export default class Blockchain {
                 this.addBlock(newBlock);
                 this.p2pNetwork.broadcastBlock(newBlock);
 
+                // Verifica se deve fazer o halving.
                 if ((nextIndex) % this.halvingInterval === 0) {
                     this.blockReward /= 2;
                     console.log(`\nBlock reward halved! New reward: ${this.blockReward}`);
@@ -206,6 +217,7 @@ export default class Blockchain {
             return false;
         }
 
+        // Verifica a assinatura da transação.
         if(transaction.senderWallet instanceof Wallet){
             if (!transaction.verifySignature()) {
                 console.error('Invalid transaction signature');
@@ -216,6 +228,7 @@ export default class Blockchain {
         const sender = transaction.senderWallet.getAddress();
         const senderBalance = this.initialBalances[sender] !== undefined ? this.initialBalances[sender] : this.balances[sender];
 
+        // Verifica se tem sando suficiente.
         if (senderBalance < transaction.amount + transaction.fee) {
             console.error(`Insufficient balance for sender: ${sender}`);
             return false;
@@ -307,9 +320,11 @@ export default class Blockchain {
         return true;
     }
 
+    // Verifica se a Blockchain atual é válida.
     isValidChain() {
         for (let i = 1; i < this.chain.length; i++) {
             try {
+                // Valida cada bloco em relação ao anterior.
                 if (!this.isValidNextBlock(this.chain[i], this.chain[i - 1])) return false;
                 this.chain[i].validateTransactions();
             } catch (error) {
@@ -334,6 +349,7 @@ export default class Blockchain {
             });
         });
 
+        // Ordena as transações para consistência do hash.
         transactions.sort((a, b) => {
             const hashA = calculateHash(JSON.stringify(a));
             const hashB = calculateHash(JSON.stringify(b));
