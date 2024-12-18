@@ -147,39 +147,6 @@ graph LR
     style WalletW fill:#CCEEFF,stroke:#003366,stroke-width:2px,color:black
 ```
 
-## Limitações
-
-A Aurelia Network é um projeto com fins didáticos e, como tal, possui algumas simplificações e limitações em comparação com blockchains de produção:
-
-*   **Rede P2P Simulada:** A comunicação entre os nós é simulada dentro do mesmo processo Node.js e não utiliza WebSockets ou protocolos de rede P2P reais.
-*   **Algoritmo de Consenso Simplificado:** O algoritmo Proof-of-Work é simplificado e não possui a mesma complexidade e segurança de algoritmos usados em blockchains como o Bitcoin.
-*   **Sem Persistência de Dados:** A blockchain e os saldos são armazenados em memória e são perdidos ao encerrar a aplicação.
-*   **Falta de Recursos Avançados:** Recursos como smart contracts, sidechains e outros mecanismos avançados de blockchains de produção não estão presentes nesta implementação.
-
-## Possíveis Melhorias
-
-*   Implementar uma rede P2P real com comunicação via WebSockets.
-*   Adicionar persistência de dados, armazenando a blockchain em um banco de dados ou arquivo.
-*   Implementar um algoritmo de consenso mais complexo e seguro.
-*   Criar uma interface gráfica para interação com a blockchain.
-*   Adicionar suporte a smart contracts.
-
-## Como Contribuir
-
-Contribuições para a Aurelia Network são bem-vindas! Se você tem interesse em ajudar a melhorar este projeto, sinta-se à vontade para:
-
-*   Reportar bugs e sugerir melhorias através das Issues do GitHub.
-*   Enviar Pull Requests com novas funcionalidades ou correções de bugs.
-*   Melhorar a documentação.
-
-Para contribuir, siga os passos:
-
-1. Faça um fork do repositório.
-2. Crie uma branch para sua feature (`git checkout -b feature/sua-feature`).
-3. Faça commit das suas alterações (`git commit -am 'Adiciona funcionalidade X'`).
-4. Faça push para a branch (`git push origin feature/sua-feature`).
-5. Abra um Pull Request no GitHub.
-
 ## Licença
 
 Este projeto está sob a licença MIT - veja o arquivo [LICENSE](https://github.com/vasconcel/aurelia-network/blob/main/LICENSE) para mais detalhes.
