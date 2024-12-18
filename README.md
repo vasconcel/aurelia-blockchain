@@ -71,33 +71,80 @@ Este projeto é uma implementação didática e **simulada** de uma blockchain b
 
     Os testes validam o funcionamento da blockchain em diversos cenários. A função `mineForTest` é utilizada internamente nos testes para simular a mineração com parâmetros controlados.
 
-## Diagrama
+## Diagrama de Classes Simplificado
 
 ```mermaid
-graph TD
+graph LR
     subgraph "Aurelia Network"
-        A[Blockchain]
-        A --> B(Block);
-        A --> T(Transaction);
-        A --> N(P2PNetwork);
-        B --> T;
-        N --> B;
-        N --> T;
-        style A fill:#006699,stroke:#003366,stroke-width:2px,color:white
-        style B fill:#3399CC,stroke:#003366,stroke-width:2px,color:white
-        style T fill:#66CCFF,stroke:#003366,stroke-width:2px,color:black
-        style N fill:#99CCFF,stroke:#003366,stroke-width:2px,color:black
+        subgraph "Blockchain «stereotype»"
+            direction LR
+            BlockchainA[Blockchain]
+            BlockchainA --> |Contém| chain[Cadeia de Blocos]
+            BlockchainA --> difficulty[Dificuldade]
+            BlockchainA --> miningRewardWallet{Carteira de Recompensa}
+            BlockchainA --> |Mantém| balances[Saldos]
+            BlockchainA --> |Fornece| mine[Minera Bloco]
+            BlockchainA --> addBlock[Adiciona Bloco]
+            BlockchainA --> isValidTransaction{Valida Transação}
+        end
+
+        subgraph "Block «stereotype»"
+            direction LR
+            BlockB[Block]
+            BlockB --> index[Index]
+            BlockB --> previousHash[Hash Anterior]
+            BlockB --> timestamp[Timestamp]
+            BlockB --> transactions[Lista de Transações]
+            BlockB --> nonce[Nonce]
+            BlockB --> merkleRoot[Merkle Root]
+            BlockB --> hash[Hash]
+            BlockB --> calculateBlockHash[Calcula Hash do Bloco]
+            BlockB --> calculateMerkleRoot[Calcula Merkle Root]
+        end
+
+        subgraph "Wallet «stereotype»"
+            direction LR
+            WalletW[Wallet]
+            WalletW --> address[Endereço]
+            WalletW --> |Fornece| signTransaction[Assina Transação]
+            WalletW --> verifyTransaction[Verifica Transação]
+        end
+
+        subgraph "P2PNetwork «stereotype»"
+            direction LR
+            P2PNetworkN[P2PNetwork]
+            P2PNetworkN --> |Fornece| broadcastTransaction[Transmite Transação]
+            P2PNetworkN --> broadcastBlock[Transmite Bloco]
+            P2PNetworkN --> onTransactionReceived{Recebe Transação}
+            P2PNetworkN --> onBlockReceived{Recebe Bloco}
+            P2PNetworkN --> resolveFork[Resolve Forks]
+        end
+
+        subgraph "Transaction «stereotype»"
+            direction LR
+            TransactionT[Transaction]
+            TransactionT --> senderWallet{Carteira do Remetente}
+            TransactionT --> recipient{Endereço do Destinatário}
+            TransactionT --> amount{Valor}
+            TransactionT --> fee{Taxa}
+            TransactionT --> timestamp
+            TransactionT --> signature{Assinatura}
+        end
+
+        %% Relações entre componentes
+        BlockchainA -- Agregação --> BlockB
+        BlockchainA -- Associação --> WalletW
+        BlockchainA -- Associação --> P2PNetworkN
+        P2PNetworkN -- Associação --> BlockB
+        P2PNetworkN -- Associação --> TransactionT
+        WalletW -- Associação --> TransactionT
     end
-    subgraph "Blockchain - Detalhes"
-        A --> chain{Cadeia de Blocos}
-        A --> difficulty{Dificuldade}
-        A --> mine{Minera Bloco}
-        A --> addBlock{Adiciona Bloco}
-    end
-    subgraph "P2PNetwork - Detalhes"
-        N --> broadcastTransaction{Transmite Transação}
-        N --> resolveFork{Resolve Forks}
-    end
+
+    style BlockchainA fill:#006699,stroke:#003366,stroke-width:2px,color:white
+    style BlockB fill:#3399CC,stroke:#003366,stroke-width:2px,color:white
+    style TransactionT fill:#66CCFF,stroke:#003366,stroke-width:2px,color:black
+    style P2PNetworkN fill:#99CCFF,stroke:#003366,stroke-width:2px,color:black
+    style WalletW fill:#CCEEFF,stroke:#003366,stroke-width:2px,color:black
 ```
 
 ## Limitações
