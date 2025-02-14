@@ -1,4 +1,4 @@
-# Aurelia Network
+# Aurelia Blockchain
 
 ## Objetivo
 
