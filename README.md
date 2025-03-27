@@ -1,76 +1,76 @@
-# Aurelia Blockchain
+# Aurelia Blockchain // Simulated Network
 
-## Objetivo
+## Overview
 
-Este projeto é uma implementação didática e **simulada** de uma blockchain básica, denominada Aurelia Network, criada como parte de uma atividade do programa de bolsas em **AWS Blockchain** e **Real Digital** pelo Compass UOL. O objetivo principal é demonstrar os conceitos fundamentais de uma blockchain básica de forma acessível e prática, incluindo a mineração de blocos com um sistema Proof-of-Work (PoW) simplificado, a gestão de transações, a resolução de conflitos (forks) e a verificação da integridade da cadeia.
+This project is an educational and **simulated** implementation of a basic blockchain, named `Aurelia Network`. It was created as part of an activity within the **AWS Blockchain** & **Real Digital** scholarship program by Compass UOL. The primary objective is to demonstrate fundamental blockchain concepts in an accessible and practical manner, including block mining via a simplified Proof-of-Work (PoW) system, transaction management, conflict resolution (forks), and chain integrity verification.
 
-## Funcionalidades
+## Features
 
-*   **Criação do Bloco Gênesis:** A cadeia inicia com um bloco gênesis pré-definido.
-*   **Adição de Transações:** Permite adicionar novas transações à memória (transaction pool), antes da mineração do próximo bloco.
-*   **Mineração de Blocos:** Implementa um algoritmo Proof-of-Work (PoW) simplificado para adicionar novos blocos à cadeia. A dificuldade de mineração é configurável.
-*   **Simulação de Rede P2P:** Simula uma rede P2P onde nós (instâncias da classe `Blockchain`) podem se conectar, transmitir transações e blocos, e resolver conflitos de cadeia (forks). A comunicação é simulada através da classe `P2PNetwork`, sem uso de WebSockets.
-*   **Resolução de Forks:** Implementa um mecanismo básico de resolução de forks, priorizando a cadeia mais longa e, em caso de empate, a que possui o bloco com timestamp mais antigo.
-*   **Controle de Saldos:** Mantém o controle de saldos de endereços (no mapa `balances` da classe `Blockchain`), atualizando-os após cada bloco minerado.
-*   **Taxas de Transação:** Inclui taxas de transação como incentivo para os mineradores.
-*   **Recompensa ao Minerador:** O minerador que resolve o PoW recebe uma recompensa em tokens (recompensa fixa + taxas de transação). A recompensa fixa sofre *halving* (redução pela metade) a cada `halvingInterval` blocos.
-*   **Validação da Cadeia:** Verifica a integridade da blockchain, assegurando que nenhum bloco tenha sido adulterado. Inclui verificação de hashes (bloco anterior, hash atual calculado, hash da dificuldade), Merkle Root e assinaturas das transações.
-*   **Histórico de Endereços:** Permite consultar o histórico de transações de um endereço específico (armazenado no mapa `transactionIndex` da classe `Blockchain`).
-*   **Merkle Tree:** Utiliza uma Merkle Tree para calcular o `merkleRoot` e melhorar a eficiência na validação de blocos com muitas transações.
-*   **Interface de Linha de Comando (CLI):** Uma interface amigável baseada em texto para interação com a blockchain.
+*   **Genesis Block Creation:** The chain initializes with a predefined genesis block.
+*   **Transaction Addition:** Allows adding new transactions to the memory pool (`transaction pool`) before the next block is mined.
+*   **Block Mining:** Implements a simplified Proof-of-Work (`PoW`) algorithm to add new blocks to the chain. Mining difficulty is configurable.
+*   **P2P Network Simulation:** Simulates a Peer-to-Peer network where nodes (instances of the `Blockchain` class) can connect, broadcast transactions and blocks, and resolve chain conflicts (forks). Communication is simulated via the `P2PNetwork` class, without using WebSockets.
+*   **Fork Resolution:** Implements a basic fork resolution mechanism, prioritizing the longest chain. In case of a tie, the chain with the block having the oldest timestamp is preferred.
+*   **Balance Control:** Maintains address balances (within the `balances` map in the `Blockchain` class), updating them after each mined block.
+*   **Transaction Fees:** Includes transaction fees as an incentive for miners.
+*   **Miner Reward:** The miner who solves the PoW puzzle receives a token reward (fixed reward + transaction fees). The fixed reward undergoes *halving* every `halvingInterval` blocks.
+*   **Chain Validation:** Verifies the blockchain's integrity, ensuring no block has been tampered with. Includes checks for hashes (previous block, calculated current hash, difficulty hash), `Merkle Root`, and transaction signatures.
+*   **Address History:** Allows querying the transaction history for a specific address (stored in the `transactionIndex` map within the `Blockchain` class).
+*   **Merkle Tree:** Utilizes a Merkle Tree to compute the `merkleRoot`, improving efficiency in validating blocks with numerous transactions.
+*   **Command Line Interface (CLI):** Provides a user-friendly text-based interface for interacting with the blockchain.
 
-## Tecnologias Utilizadas
+## Core_Technologies
 
-*   **Node.js:** Ambiente de execução JavaScript.
-*   **JavaScript:** Linguagem de programação principal.
-*   **ethers.js:** Biblioteca para interação com carteiras e assinaturas digitais.
-*   **crypto-js:** Biblioteca para funções criptográficas (SHA256).
-*   **Mocha e Chai:** Frameworks para testes unitários.
-*   **async-mutex:** Biblioteca para controle de concorrência na mineração.
+*   `Node.js`: JavaScript runtime environment.
+*   `JavaScript`: Primary programming language.
+*   `ethers.js`: Library for interacting with wallets and digital signatures.
+*   `crypto-js`: Library for cryptographic functions (`SHA256`).
+*   `Mocha` & `Chai`: Frameworks for unit testing.
+*   `async-mutex`: Library for managing concurrency during mining.
 
-## Como Executar
+## Execution_Guide
 
-1. **Pré-requisitos:** Certifique-se de ter o Node.js e o npm (Node Package Manager) instalados em seu sistema.
+1.  **Prerequisites:** Ensure you have Node.js and npm (Node Package Manager) installed on your system.
 
-2. **Clone o Repositório:**
+2.  **Clone the Repository:**
 
     ```bash
-    git clone https://github.com/vasconcel/aurelia-network.git
+    git clone https://github.com/vasconcel/aurelia-blockchain.git
     ```
 
-3. **Instale as Dependências:**
+3.  **Install Dependencies:**
 
     ```bash
-    cd aurelia-network
+    cd aurelia-blockchain
     npm install
     ```
 
-4. **Execute a Aplicação:**
+4.  **Run the Application:**
 
     ```bash
     node index.js
     ```
 
-    A CLI guiará você pelas opções disponíveis:
+    The CLI will guide you through the available options:
 
-    *   **1. Add transaction:** Adiciona uma nova transação ao pool de transações.
-    *   **2. Mine:** Inicia a mineração de um novo bloco, incluindo as transações pendentes e a transação de recompensa.
-    *   **3. View blockchain:** Exibe a blockchain atual.
-    *   **4. View address history:** Mostra o histórico de transações de um endereço.
-    *   **5. Exit:** Encerra a aplicação.
+    *   **1. Add transaction:** Adds a new transaction to the transaction pool.
+    *   **2. Mine:** Initiates the mining of a new block, including pending transactions and the reward transaction.
+    *   **3. View blockchain:** Displays the current blockchain.
+    *   **4. View address history:** Shows the transaction history for a specific address.
+    *   **5. Exit:** Terminates the application.
 
-5. **Interagindo com a CLI:**
+5.  **Interacting with the CLI:**
 
-   Siga as instruções da CLI. Por exemplo, para adicionar uma transação, escolha a opção "1", insira o endereço do destinatário, o valor a ser transferido e a taxa de transação. Para minerar um bloco, escolha a opção "2".
+    Follow the CLI prompts. For example, to add a transaction, choose option "1", enter the recipient's address, the amount to transfer, and the transaction fee. To mine a block, choose option "2".
 
-6. **Execute os Testes:**
+6.  **Run Tests:**
 
     ```bash
     npm test
     ```
 
-    Os testes validam o funcionamento da blockchain em diversos cenários. A função `mineForTest` é utilizada internamente nos testes para simular a mineração com parâmetros controlados.
+    The tests validate the blockchain's functionality across various scenarios. The `mineForTest` function is used internally within the tests to simulate mining with controlled parameters.
 
-## Licença
+## License
 
-Este repositório está licenciado sob a [MIT License](https://choosealicense.com/licenses/mit/).
+This repository is licensed under the [MIT License](https://choosealicense.com/licenses/mit/).
