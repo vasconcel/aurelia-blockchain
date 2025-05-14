@@ -1,4 +1,4 @@
-# Aurelia Blockchain // Simulated Network
+# Aurelia Blockchain
 
 ## Overview
 
