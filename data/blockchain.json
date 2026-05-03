@@ -1,0 +1,26 @@
+{
+  "chain": [
+    {
+      "index": 0,
+      "previousHash": "0",
+      "timestamp": 1678886400000,
+      "transactions": [],
+      "nonce": 0,
+      "merkleRoot": null,
+      "difficulty": 4,
+      "hash": "71927fb0a39de4d1e08acb8ac770bb263272d387264a286d6ab92bb5751373aa"
+    }
+  ],
+  "ledger": {
+    "balances": {
+      "0x0000000000000000000000000000000000000000": 1000000,
+      "0x69826b36603ee6436F0f2f3B2E6245F72554Da28": 1000
+    },
+    "nonces": {},
+    "transactionIndex": {}
+  },
+  "metadata": {
+    "savedAt": 1777844899144,
+    "blockCount": 1
+  }
+}

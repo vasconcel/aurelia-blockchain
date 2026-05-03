@@ -3,361 +3,329 @@ import { Transaction } from "./Transaction.js";
 import { Wallet } from './Wallet.js';
 import P2PNetwork from './P2PNetwork.js';
 import { Mutex } from 'async-mutex';
-import * as crypto from 'crypto';
+import { Consensus } from './Consensus.js';
+import { Ledger } from './Ledger.js';
+import { Metrics } from './Metrics.js';
 
-function calculateHash(data) {
-    return crypto.createHash('sha256').update(data).digest('hex');
-}
-
-// Função auxiliar para mineração em ambiente de teste.
-export async function mineForTest(blockchain, difficulty, maxTimestampDiff) {
-    const diff = difficulty || blockchain.difficulty;
-
-    const previousBlock = blockchain.latestBlock;
-    const nextIndex = previousBlock.index + 1;
-    const previousHash = previousBlock.hash;
-    let timestamp = Date.now();
-    const transactionsToMine = blockchain.p2pNetwork.transactionPool;
-    
-    const totalFees = transactionsToMine.reduce((sum, tx) => sum + tx.fee, 0);
-
-    // Transação de recompensa do minerador.
-    const minerRewardTransaction = new Transaction(
-        blockchain.miningRewardWallet,
-        blockchain.miningRewardWallet.getAddress(),
-        blockchain.blockReward + totalFees,
-        0
-    );
-    minerRewardTransaction.timestamp = timestamp;
-    await minerRewardTransaction.signTransaction();
-
-    const transactionsToMineWithReward = [minerRewardTransaction, ...transactionsToMine];
-    const merkleRoot = generateMerkleRoot(transactionsToMineWithReward);
-    let nonce = 0;
-    let newBlock;
-
-    // Loop de mineração.
-    do {
-        timestamp = Date.now();
-        newBlock = new Block(
-            nextIndex,
-            previousHash,
-            timestamp,
-            transactionsToMineWithReward,
-            nonce,
-            merkleRoot
-        );
-        nonce++;
-    } while (!newBlock.hash.startsWith("0".repeat(diff)));
-
-    console.log("Bloco minerado (para teste):", newBlock);
-
-    // Valida e adiciona o novo bloco à blockchain.
-    if (blockchain.isValidNextBlock(newBlock, previousBlock)) {
-        blockchain.addBlock(newBlock);
-        blockchain.p2pNetwork.broadcastBlock(newBlock);
-
-        console.log("Bloco minerado com sucesso (para teste):", newBlock);
-        blockchain.p2pNetwork.transactionPool = [];
-        return newBlock;
-    } else {
-        console.error("Bloco minerado inválido (para teste), não será adicionado à cadeia.");
-        return;
-    }
-}
-
+/**
+ * Main blockchain controller managing chain state, mining, and consensus.
+ * Coordinates transaction validation, block mining, ledger updates, and P2P communication.
+ */
 export default class Blockchain {
+    /**
+     * Creates a new Blockchain instance with genesis block.
+     */
     constructor() {
-        this.chain = [Block.genesis];
+        this.chain = [Block.getGenesis()];
         this.difficulty = 4;
         this.blockReward = 50;
         this.halvingInterval = 210000;
         this.miningRewardWallet = new Wallet();
-        this.transactionIndex = {};
         this.p2pNetwork = new P2PNetwork(this);
         this.latestBlock = this.chain[0];
         this.mineMutex = new Mutex();
-        this.initialBalances = {
+        this.maxTimestampDiff = 15 * 60 * 1000;
+        this.cumulativeDifficulty = this.latestBlock.getCumulativeDifficulty();
+        
+        const initialBalances = {
             "0x0000000000000000000000000000000000000000": 1000000,
             [this.miningRewardWallet.getAddress()]: 1000,
         };
-        this.balances = { ...this.initialBalances };
-        this.maxTimestampDiff = 15 * 60 * 1000;
+        
+        this.ledger = new Ledger(initialBalances);
+        this.metrics = new Metrics();
+        
         this.mine = this.mine.bind(this);
     }
 
+    /**
+     * Gets current cumulative difficulty of the chain.
+     * Research Purpose: Fork resolution metric.
+     * @returns {number} Cumulative difficulty.
+     */
+    getCumulativeDifficulty() {
+        return this.cumulativeDifficulty;
+    }
+
+    /**
+     * Recalculates cumulative difficulty for entire chain.
+     * @returns {number} Total cumulative difficulty.
+     */
+    calculateCumulativeDifficulty() {
+        let total = 0;
+        for (const block of this.chain) {
+            total += Math.pow(16, block.difficulty);
+        }
+        return total;
+    }
+
+    /**
+     * Synchronizes ledger with persisted state.
+     * @param {Object} initialState - Ledger state to restore.
+     */
+    syncLedger(initialState) {
+        if (initialState) {
+            this.ledger.setState(initialState);
+        }
+    }
+
+    /**
+     * Gets the entire blockchain.
+     * @returns {Array} Array of Block objects.
+     */
     getBlockchain() {
         return this.chain;
     }
 
-    isValidHashDifficulty(hash) {
-        return hash.startsWith("0".repeat(this.difficulty));
-    }
-
+    /**
+     * Initializes ledger balances.
+     * @param {Object} balances - Address to balance map.
+     */
     initializeBalances(balances) {
-        for (const address in balances) {
-            this.balances[address] = balances[address];
-        }
+        this.ledger.initialize(balances);
     }
 
+    /**
+     * Updates ledger with processed transactions.
+     * @param {Array} transactions - Array of Transaction objects.
+     */
     updateBalances(transactions) {
-        for (const tx of transactions) {
-            if (!(tx instanceof Transaction)) {
-                console.error('Invalid transaction: Transaction is not an instance of Transaction');
-                continue;
-            }
-
-            const sender = tx.senderWallet.getAddress();
-            const recipient = tx.recipient;
-
-            if (!this.balances[sender]) this.balances[sender] = 0;
-            if (!this.balances[recipient]) this.balances[recipient] = 0;
-
-            if (sender === this.miningRewardWallet.getAddress()) {
-                this.balances[this.miningRewardWallet.getAddress()] += (tx.amount + tx.fee);
-            } else {
-                this.balances[sender] -= (tx.amount + tx.fee);
-                this.balances[recipient] += tx.amount;
-            }
-        }
+        this.ledger.update(transactions);
     }
 
-    // Função principal para mineração de blocos.
-    async mine(difficulty, maxTimestampDiff) {
+    /**
+     * Mines a new block with valid transactions from the mempool.
+     * Research Purpose: Simulates Proof-of-Work consensus; records mining duration metrics.
+     * @param {Object} options - Mining options {difficulty, isTestMode}.
+     * @returns {Block|null} Newly mined block or null if failed.
+     */
+    async mine(options = {}) {
         const release = await this.mineMutex.acquire();
         try {
-            // Verifica se está em modo de teste e chama a função apropriada.
-            if (typeof process.env.TEST_MODE !== 'undefined' && process.env.TEST_MODE === 'true') {
-                return await mineForTest(this, difficulty, maxTimestampDiff);
-            }
+            const isTestMode = options.isTestMode || (typeof process.env.TEST_MODE !== 'undefined' && process.env.TEST_MODE === 'true');
+            const difficulty = options.difficulty || (isTestMode ? 1 : this.difficulty);
+            
+            let transactionsToMine;
+            
+            if (!isTestMode) {
+                const validTransactions = this.p2pNetwork.transactionPool.filter(tx => {
+                    if (!this.isValidTransaction(tx)) {
+                        return false;
+                    }
+                    return true;
+                });
 
-            // Filtra as transações válidas do pool.
-            const validTransactions = this.p2pNetwork.transactionPool.filter(tx => {
-                if (!this.isValidTransaction(tx)) {
-                    console.error("Transação considerada inválida para mineração.");
-                    return false;
+                if (validTransactions.length === 0) {
+                    return;
                 }
-                return true;
-            });
-
-            if (validTransactions.length === 0) {
-                console.warn("No valid transactions to mine after filtering.");
-                return;
+                transactionsToMine = validTransactions;
+            } else {
+                transactionsToMine = this.p2pNetwork.transactionPool;
             }
 
             const previousBlock = this.latestBlock;
             const nextIndex = previousBlock.index + 1;
             const previousHash = previousBlock.hash;
             let timestamp = Date.now();
-            const totalFees = validTransactions.reduce((sum, tx) => sum + tx.fee, 0);
+            const totalFees = transactionsToMine.reduce((sum, tx) => sum + tx.fee, 0);
+            const miningStartTime = Date.now();
 
-            // Cria a transação de recompensa do minerador.
+            const minerRewardAddress = this.miningRewardWallet.getAddress();
+            const minerRewardNonce = this.ledger.getNonce(minerRewardAddress) + 1;
+            
             const minerRewardTransaction = new Transaction(
                 this.miningRewardWallet,
-                this.miningRewardWallet.getAddress(),
+                minerRewardAddress,
                 this.blockReward + totalFees,
-                0
+                0,
+                minerRewardNonce
             );
 
             minerRewardTransaction.timestamp = timestamp;
             await minerRewardTransaction.signTransaction();
 
-            // Combina a transação de recompensa com as transações válidas.
-            const transactionsToMine = [minerRewardTransaction, ...validTransactions];
-            const merkleRoot = generateMerkleRoot(transactionsToMine);
+            const transactionsToMineWithReward = [minerRewardTransaction, ...transactionsToMine];
+            const merkleRoot = generateMerkleRoot(transactionsToMineWithReward);
             let nonce = 0;
             let newBlock;
 
-            // Loop de mineração.
             do {
                 timestamp = Date.now();
                 newBlock = new Block(
                     nextIndex,
                     previousHash,
                     timestamp,
-                    transactionsToMine,
+                    transactionsToMineWithReward,
                     nonce,
-                    merkleRoot
+                    merkleRoot,
+                    difficulty
                 );
                 nonce++;
-            } while (!this.isValidHashDifficulty(newBlock.hash));
+            } while (!newBlock.hash.startsWith('0'.repeat(difficulty)));
 
+            const miningDuration = Date.now() - miningStartTime;
+            
             if (this.isValidNextBlock(newBlock, previousBlock)) {
                 this.addBlock(newBlock);
                 this.p2pNetwork.broadcastBlock(newBlock);
-
-                // Verifica se deve fazer o halving.
-                if ((nextIndex) % this.halvingInterval === 0) {
-                    this.blockReward /= 2;
-                    console.log(`\nBlock reward halved! New reward: ${this.blockReward}`);
+                
+                if (this.metrics) {
+                    this.metrics.recordMiningDuration(miningDuration);
+                    this.metrics.incrementTransactionCount(transactionsToMine.length);
                 }
 
-                console.log("Bloco minerado com sucesso:", newBlock);
+                if ((nextIndex) % this.halvingInterval === 0) {
+                    this.blockReward /= 2;
+                }
+
                 this.p2pNetwork.transactionPool = [];
                 return newBlock;
             } else {
-                console.error("Bloco minerado inválido, não será adicionado à cadeia.");
                 return;
             }
         } catch (error) {
-            console.error("Erro durante a mineração:", error);
         } finally {
             release();
         }
     }
 
+    /**
+     * Validates a transaction against consensus rules.
+     * @param {Transaction} transaction - Transaction to validate.
+     * @returns {boolean} True if valid.
+     */
     isValidTransaction(transaction) {
-        if (!transaction || typeof transaction !== 'object') {
-            console.error('Invalid transaction: Transaction is not an object');
-            return false;
-        }
-
-        if (!transaction.senderWallet || typeof transaction.senderWallet.getAddress !== 'function') {
-            console.error('Invalid transaction: senderWallet is undefined or getAddress is not a function', transaction.senderWallet);
-            return false;
-        }
-
-        // Verifica a assinatura da transação.
-        if(transaction.senderWallet instanceof Wallet){
-            if (!transaction.verifySignature()) {
-                console.error('Invalid transaction signature');
-                return false;
-            }
-        }
-
-        const sender = transaction.senderWallet.getAddress();
-        const senderBalance = this.initialBalances[sender] !== undefined ? this.initialBalances[sender] : this.balances[sender];
-
-        // Verifica se tem sando suficiente.
-        if (senderBalance < transaction.amount + transaction.fee) {
-            console.error(`Insufficient balance for sender: ${sender}`);
-            return false;
-        }
-
-        if (transaction.fee < 0) {
-            console.error(`Invalid transaction fee: ${transaction.fee}`);
-            return false;
-        }
-
-        return true;
+        return Consensus.validateTransaction(transaction, this.ledger);
     }
 
+    /**
+     * Gets balance for an address.
+     * @param {string} address - Wallet address.
+     * @returns {number} Current balance.
+     */
     getBalance(address) {
-        return this.balances[address] || 0;
+        return this.ledger.getBalance(address);
     }
 
+    /**
+     * Gets nonce for an address.
+     * @param {string} address - Wallet address.
+     * @returns {number} Current nonce.
+     */
+    getNonce(address) {
+        return this.ledger.getNonce(address);
+    }
+
+    /**
+     * Updates transaction index for address history.
+     * @param {Array} transactions - Transactions to index.
+     */
     updateTransactionIndex(transactions) {
         for (const tx of transactions) {
             const sender = tx.senderWallet.getAddress();
             const recipient = tx.recipient;
-
-            if (!this.transactionIndex[sender]) this.transactionIndex[sender] = [];
-            this.transactionIndex[sender].push(tx);
-
-            if (recipient !== this.miningRewardWallet.getAddress()) {
-                if (!this.transactionIndex[recipient]) this.transactionIndex[recipient] = [];
-                this.transactionIndex[recipient].push(tx);
-            }
+            this.ledger.getHistory(sender);
         }
     }
 
+    /**
+     * Gets transaction history for an address.
+     * @param {string} address - Wallet address.
+     * @returns {Array} Array of transactions.
+     */
     getAddressHistory(address) {
-        return this.transactionIndex[address] || [];
+        return this.ledger.getHistory(address);
     }
 
+    /**
+     * Adds a new block to the chain after validation.
+     * @param {Block} newBlock - Block to add.
+     * @returns {boolean} True if added successfully.
+     */
     addBlock(newBlock) {
         if (this.isValidNextBlock(newBlock, this.latestBlock)) {
             this.chain.push(newBlock);
             this.latestBlock = newBlock;
-            this.updateTransactionIndex(newBlock.transactions);
-            this.updateBalances(newBlock.transactions);
+            this.cumulativeDifficulty = this.calculateCumulativeDifficulty();
+            this.ledger.update(newBlock.transactions, this.miningRewardWallet.getAddress());
             return true;
         }
-        console.error("Invalid block received. Not adding to chain.");
         return false;
     }
 
+    /**
+     * Validates a block before adding to chain.
+     * @param {Block} newBlock - Block to validate.
+     * @param {Block} previousBlock - Previous block in chain.
+     * @returns {boolean} True if valid.
+     */
     isValidNextBlock(newBlock, previousBlock) {
-        const currentTimestamp = Date.now();
+        const options = {
+            difficulty: this.difficulty,
+            maxTimestampDiff: this.maxTimestampDiff
+        };
 
-        if (previousBlock.index + 1 !== newBlock.index) {
-            console.error("Invalid block index");
+        if (!Consensus.validateBlock(newBlock, previousBlock, options)) {
             return false;
         }
 
-        if (previousBlock.hash !== newBlock.previousHash) {
-            console.error("Invalid previous hash");
+        const simulatedLedger = this._createSimulatedLedger(newBlock.transactions);
+        
+        if (!Consensus.validateBlockTransactions(newBlock, previousBlock, this.ledger, { simulatedLedger })) {
             return false;
-        }
-
-        if (this.calculateBlockHash(newBlock) !== newBlock.hash) {
-            console.error("Invalid block hash");
-            return false;
-        }
-
-        if (!this.isValidHashDifficulty(newBlock.hash)) {
-            console.error("Invalid hash difficulty");
-            return false;
-        }
-
-        if (generateMerkleRoot(newBlock.transactions) !== newBlock.merkleRoot) {
-            console.error("Invalid merkle root");
-            return false;
-        }
-
-        if (newBlock.timestamp > currentTimestamp + this.maxTimestampDiff || newBlock.timestamp < previousBlock.timestamp - this.maxTimestampDiff) {
-            console.error(`Invalid timestamp: Block timestamp ${newBlock.timestamp} is out of the allowed range.`);
-            return false;
-        }
-
-        for (const tx of newBlock.transactions) {
-            if (!(tx instanceof Transaction) || !this.isValidTransaction(tx)) {
-                console.error(`Invalid transaction in block`);
-                return false;
-            }
         }
 
         return true;
     }
 
-    // Verifica se a Blockchain atual é válida.
+    /**
+     * Creates a temporary ledger for transaction simulation.
+     * @param {Array} transactions - Transactions to simulate.
+     * @returns {Ledger} Simulated ledger instance.
+     */
+    _createSimulatedLedger(transactions) {
+        const tempLedger = new Ledger({});
+        tempLedger.setState(this.ledger.getState());
+        return tempLedger;
+    }
+
+    /**
+     * Validates entire blockchain integrity.
+     * @returns {boolean} True if chain is valid.
+     */
     isValidChain() {
         for (let i = 1; i < this.chain.length; i++) {
             try {
-                // Valida cada bloco em relação ao anterior.
-                if (!this.isValidNextBlock(this.chain[i], this.chain[i - 1])) return false;
+                if (!Consensus.validateBlock(this.chain[i], this.chain[i - 1], { 
+                    difficulty: this.difficulty, 
+                    maxTimestampDiff: this.maxTimestampDiff 
+                })) {
+                    return false;
+                }
                 this.chain[i].validateTransactions();
             } catch (error) {
-                console.error(`Error validating block ${i}:`, error);
                 return false;
             }
         }
         return true;
     }
 
+    /**
+     * Calculates hash for a block.
+     * @param {Block} block - Block to hash.
+     * @returns {string} Block hash.
+     */
     calculateBlockHash(block) {
-        const { index, previousHash, timestamp, merkleRoot, nonce } = block;
-        const transactions = block.transactions.map(tx => {
-            const senderAddress = tx.senderWallet ? tx.senderWallet.getAddress() : 'Coinbase';
-            return JSON.stringify({
-                sender: senderAddress,
-                recipient: tx.recipient,
-                amount: tx.amount,
-                fee: tx.fee,
-                timestamp: tx.timestamp,
-                signature: tx.signature
-            });
-        });
+        return Consensus.calculateBlockHash(block);
+    }
 
-        // Ordena as transações para consistência do hash.
-        transactions.sort((a, b) => {
-            const hashA = calculateHash(JSON.stringify(a));
-            const hashB = calculateHash(JSON.stringify(b));
-            return hashA.localeCompare(hashB);
-        });
-
-        const blockString = `${index}${previousHash}${timestamp}${merkleRoot}${nonce}${transactions.join('')}`;
-        return calculateHash(blockString);
+    /**
+     * Validates hash meets difficulty requirement.
+     * @param {string} hash - Hash to validate.
+     * @returns {boolean} True if valid.
+     */
+    isValidHashDifficulty(hash) {
+        return Consensus.validateHashDifficulty(hash, this.difficulty);
     }
 }
 

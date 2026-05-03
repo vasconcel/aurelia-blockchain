@@ -74,3 +74,81 @@ This project is an educational and **simulated** implementation of a basic block
 ## License
 
 This repository is licensed under the [MIT License](https://choosealicense.com/licenses/mit/).
+
+---
+
+# Deployment Guide
+
+## Quick Start with Docker
+
+```bash
+# Start both API and Frontend
+docker-compose up --build
+
+# Or run separately:
+# API: http://localhost:3000
+# Frontend: http://localhost:5173
+```
+
+## Manual Deployment
+
+### Backend (Render.com Free Tier)
+
+1. **Create GitHub Repository**: Push your code to GitHub
+
+2. **Deploy to Render**:
+   - Go to [render.com](https://render.com) and sign in
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repository
+   - Configure:
+     - **Name**: `aurelia-api`
+     - **Build Command**: `npm install`
+     - **Start Command**: `node index.js --server`
+   - Click "Deploy"
+
+3. **Environment Variables** (optional):
+   - `NODE_ENV=production` (enables low difficulty for free tier)
+
+### Frontend (Vercel Free Tier)
+
+1. **Prepare for Production**:
+   ```bash
+   cd frontend
+   npm run build
+   ```
+
+2. **Deploy to Vercel**:
+   - Go to [vercel.com](https://vercel.com) and sign in
+   - Click "Add New..." → "Project"
+   - Import your GitHub repository
+   - Configure:
+     - **Framework Preset**: Vite
+     - **Build Command**: `npm run build`
+     - **Output Directory**: `dist`
+   - Add environment variable:
+     - `VITE_API_URL` = Your Render API URL (e.g., `https://aurelia-api.onrender.com`)
+   - Click "Deploy"
+
+### Environment Configuration
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `VITE_API_URL` | Backend API URL | `https://your-api.onrender.com` |
+| `NODE_ENV` | Set to `production` for optimized settings | `production` |
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Health check |
+| GET | `/blockchain` | Full chain |
+| GET | `/balance/:address` | Address balance |
+| POST | `/transaction` | Create transaction |
+| POST | `/mine` | Start mining |
+| GET | `/metrics` | Research metrics |
+
+## Socket.io Events
+
+- `block_mined` - New block added
+- `transaction_added` - Transaction in mempool
+- `connection_change` - Connection status

@@ -1,3 +1,7 @@
 import { Crypto } from '@peculiar/webcrypto';
 
-global.crypto = new Crypto();
+if (!global.crypto) {
+    Object.defineProperty(global, 'crypto', { value: new Crypto(), writable: true });
+} else if (!global.crypto.subtle) {
+    global.crypto = new Crypto();
+}
