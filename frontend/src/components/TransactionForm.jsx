@@ -14,19 +14,20 @@ export default function TransactionForm() {
     setLoading(true);
     setSuccess(false);
 
+    const txData = { recipient, amount: parseFloat(amount), fee: parseFloat(fee) };
+    console.log('Submitting transaction:', txData);
+
     try {
-      await createTransaction({
-        recipient,
-        amount: parseFloat(amount),
-        fee: parseFloat(fee),
-      });
+      const response = await createTransaction(txData);
+      console.log('Transaction response:', response.data);
       setSuccess(true);
       setRecipient('');
       setAmount('');
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
       console.error('Failed to create transaction:', error);
-      alert(error.response?.data?.error || 'Transaction failed');
+      const errorMsg = error.response?.data?.error || error.message || 'Transaction failed';
+      alert(`Error: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
@@ -41,41 +42,43 @@ export default function TransactionForm() {
         Send Transaction
       </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label>Recipient Address</label>
-          <input
-            type="text"
-            value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
-            placeholder="0x..."
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+        <div className="flex flex-col gap-6">
           <div>
-            <label>Amount</label>
+            <label>Recipient Address</label>
             <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              step="0.01"
-              min="0"
+              type="text"
+              value={recipient}
+              onChange={(e) => setRecipient(e.target.value)}
+              placeholder="0x..."
               required
             />
           </div>
-          <div>
-            <label>Fee</label>
-            <input
-              type="number"
-              value={fee}
-              onChange={(e) => setFee(e.target.value)}
-              placeholder="0.5"
-              step="0.1"
-              min="0"
-            />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label>Amount</label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+                required
+              />
+            </div>
+            <div>
+              <label>Fee</label>
+              <input
+                type="number"
+                value={fee}
+                onChange={(e) => setFee(e.target.value)}
+                placeholder="0.5"
+                step="0.1"
+                min="0"
+              />
+            </div>
           </div>
         </div>
 

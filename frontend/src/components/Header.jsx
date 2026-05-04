@@ -31,7 +31,7 @@ export default function Header() {
           <h1 className="text-xl font-bold text-cyan-400">Aurelia Explorer</h1>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 pb-1">
           <div className="flex items-center gap-2">
             <Wallet size={18} className="text-cyan-400" />
             <span className="text-sm text-slate-300">Miner:</span>

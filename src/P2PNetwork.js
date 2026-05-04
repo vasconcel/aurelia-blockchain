@@ -68,8 +68,22 @@ class P2PNetwork {
      * @param {Object} node - Node receiving the transaction.
      */
     async onTransactionReceived(transaction, node) {
-        if (node.blockchain.isValidTransaction(transaction)) {
+        console.log('P2P: Received transaction, validating...', { 
+            sender: transaction.senderWallet?.getAddress?.(),
+            recipient: transaction.recipient,
+            amount: transaction.amount 
+        });
+        
+        const isValid = node.blockchain.isValidTransaction(transaction);
+        console.log('P2P: Transaction valid?', isValid);
+        
+        if (isValid) {
             node.transactionPool.push(transaction);
+            console.log('P2P: Transaction added to pool, pool size:', node.transactionPool.length);
+            return true;
+        } else {
+            console.log('P2P: Transaction validation failed, not added to pool');
+            return false;
         }
     }
 

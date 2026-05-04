@@ -1,154 +1,149 @@
-# Aurelia Blockchain
+# 🎐 Aurelia Network v2.0
 
-## Overview
-
-This project is an educational and **simulated** implementation of a basic blockchain, named `Aurelia Network`. It was created as part of an activity within the **AWS Blockchain** & **Real Digital** scholarship program by Compass UOL. The primary objective is to demonstrate fundamental blockchain concepts in an accessible and practical manner, including block mining via a simplified Proof-of-Work (PoW) system, transaction management, conflict resolution (forks), and chain integrity verification.
-
-## Features
-
-*   **Genesis Block Creation:** The chain initializes with a predefined genesis block.
-*   **Transaction Addition:** Allows adding new transactions to the memory pool (`transaction pool`) before the next block is mined.
-*   **Block Mining:** Implements a simplified Proof-of-Work (`PoW`) algorithm to add new blocks to the chain. Mining difficulty is configurable.
-*   **P2P Network Simulation:** Simulates a Peer-to-Peer network where nodes (instances of the `Blockchain` class) can connect, broadcast transactions and blocks, and resolve chain conflicts (forks). Communication is simulated via the `P2PNetwork` class, without using WebSockets.
-*   **Fork Resolution:** Implements a basic fork resolution mechanism, prioritizing the longest chain. In case of a tie, the chain with the block having the oldest timestamp is preferred.
-*   **Balance Control:** Maintains address balances (within the `balances` map in the `Blockchain` class), updating them after each mined block.
-*   **Transaction Fees:** Includes transaction fees as an incentive for miners.
-*   **Miner Reward:** The miner who solves the PoW puzzle receives a token reward (fixed reward + transaction fees). The fixed reward undergoes *halving* every `halvingInterval` blocks.
-*   **Chain Validation:** Verifies the blockchain's integrity, ensuring no block has been tampered with. Includes checks for hashes (previous block, calculated current hash, difficulty hash), `Merkle Root`, and transaction signatures.
-*   **Address History:** Allows querying the transaction history for a specific address (stored in the `transactionIndex` map within the `Blockchain` class).
-*   **Merkle Tree:** Utilizes a Merkle Tree to compute the `merkleRoot`, improving efficiency in validating blocks with numerous transactions.
-*   **Command Line Interface (CLI):** Provides a user-friendly text-based interface for interacting with the blockchain.
-
-## Core_Technologies
-
-*   `Node.js`: JavaScript runtime environment.
-*   `JavaScript`: Primary programming language.
-*   `ethers.js`: Library for interacting with wallets and digital signatures.
-*   `crypto-js`: Library for cryptographic functions (`SHA256`).
-*   `Mocha` & `Chai`: Frameworks for unit testing.
-*   `async-mutex`: Library for managing concurrency during mining.
-
-## Execution_Guide
-
-1.  **Prerequisites:** Ensure you have Node.js and npm (Node Package Manager) installed on your system.
-
-2.  **Clone the Repository:**
-
-    ```bash
-    git clone https://github.com/vasconcel/aurelia-blockchain.git
-    ```
-
-3.  **Install Dependencies:**
-
-    ```bash
-    cd aurelia-blockchain
-    npm install
-    ```
-
-4.  **Run the Application:**
-
-    ```bash
-    node index.js
-    ```
-
-    The CLI will guide you through the available options:
-
-    *   **1. Add transaction:** Adds a new transaction to the transaction pool.
-    *   **2. Mine:** Initiates the mining of a new block, including pending transactions and the reward transaction.
-    *   **3. View blockchain:** Displays the current blockchain.
-    *   **4. View address history:** Shows the transaction history for a specific address.
-    *   **5. Exit:** Terminates the application.
-
-5.  **Interacting with the CLI:**
-
-    Follow the CLI prompts. For example, to add a transaction, choose option "1", enter the recipient's address, the amount to transfer, and the transaction fee. To mine a block, choose option "2".
-
-6.  **Run Tests:**
-
-    ```bash
-    npm test
-    ```
-
-    The tests validate the blockchain's functionality across various scenarios. The `mineForTest` function is used internally within the tests to simulate mining with controlled parameters.
-
-## License
-
-This repository is licensed under the [MIT License](https://choosealicense.com/licenses/mit/).
+**A Bioluminescent Blockchain Ecosystem for Empirical Software Engineering Research**
 
 ---
 
-# Deployment Guide
+## Overview
 
-## Quick Start with Docker
+Aurelia Network is a full-stack, Dockerized blockchain implementation designed for **empirical software engineering research**. Originally a command-line educational tool, the system has evolved into a **modern web dashboard** featuring the "Moon Jellyfish" (Aurelia aurita) bioluminescent aesthetic—translucent, fluid, and visually immersive.
+
+The platform enables researchers to observe real-time blockchain consensus, transaction propagation, and mining dynamics through an elegant interface backed by a robust Node.js backend.
+
+---
+
+## Key Research Features
+
+### 📊 Consensus Mechanism
+- **Heaviest Chain Rule**: Chain selection based on cumulative difficulty, not just block count
+- **Proof-of-Work**: Configurable mining difficulty (1-5) for controlled experimentation
+
+### 🔐 Security
+- **Replay Protection**: Cryptographic nonces ensure transaction uniqueness
+- **Digital Signatures**: Every transaction signed by the sender's wallet using `ethers.js`
+- **Chain Integrity**: SHA-256 hash validation with Merkle tree verification
+
+### 📡 Observability
+- **Real-time TPS**: Live transactions per second tracking
+- **Mining Duration**: Block-by-block mining time metrics
+- **Propagation Delay**: Network broadcast latency measurement
+- **CSV Export**: `metrics.csv` for academic data collection and analysis
+
+### 💾 Persistence
+- **JSON State Rehydration**: Full blockchain state restored on server restart
+- **Transaction Ledger**: Complete history per address
+- **Metrics Persistence**: Research data survives container restarts
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Backend | Node.js, Express, Socket.io |
+| Frontend | React 19, Tailwind CSS 4, Vite |
+| Database | JSON File-based (no external DB required) |
+| Deployment | Docker, Docker Compose |
+| Wallet | ethers.js v6 |
+
+---
+
+## Quick Start
 
 ```bash
-# Start both API and Frontend
-docker-compose up --build
+# Clone and start the full stack
+docker compose up --build
 
-# Or run separately:
-# API: http://localhost:3000
-# Frontend: http://localhost:5173
+# Access the research dashboard
+open http://localhost:5173
 ```
 
-## Manual Deployment
+**Ports:**
+- Frontend (Research UI): `http://localhost:5173`
+- Backend (API + Socket.io): `http://localhost:3000`
 
-### Backend (Render.com Free Tier)
+---
 
-1. **Create GitHub Repository**: Push your code to GitHub
+## Research Methodology
 
-2. **Deploy to Render**:
-   - Go to [render.com](https://render.com) and sign in
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
-   - Configure:
-     - **Name**: `aurelia-api`
-     - **Build Command**: `npm install`
-     - **Start Command**: `node index.js --server`
-   - Click "Deploy"
+### Step-by-Step Guide
 
-3. **Environment Variables** (optional):
-   - `NODE_ENV=production` (enables low difficulty for free tier)
+The dashboard features a **sequential research workflow**:
 
-### Frontend (Vercel Free Tier)
+| Step | Component | Action |
+|------|----------|--------|
+| Step 1 | Transaction Form | Create a signed data transaction |
+| Step 2 | Memory Pool | Observe network propagation |
+| Step 3 | Mining Panel | Process block with configurable difficulty |
+| Step 4 | Tentacles | Analyze the resulting chain structure |
 
-1. **Prepare for Production**:
-   ```bash
-   cd frontend
-   npm run build
-   ```
+### Data Collection
 
-2. **Deploy to Vercel**:
-   - Go to [vercel.com](https://vercel.com) and sign in
-   - Click "Add New..." → "Project"
-   - Import your GitHub repository
-   - Configure:
-     - **Framework Preset**: Vite
-     - **Build Command**: `npm run build`
-     - **Output Directory**: `dist`
-   - Add environment variable:
-     - `VITE_API_URL` = Your Render API URL (e.g., `https://aurelia-api.onrender.com`)
-   - Click "Deploy"
+1. **Interactive Observation**: Watch real-time metrics as blocks are mined
+2. **Export Metrics**: Click "Export Metrics" in the Mining panel
+3. **CSV Analysis**: Review `metrics.csv` for:
+   - Transaction count per block
+   - Mining duration variability
+   - Propagation delay patterns
 
-### Environment Configuration
+```bash
+# View exported metrics
+cat data/metrics.csv
+```
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API URL | `https://your-api.onrender.com` |
-| `NODE_ENV` | Set to `production` for optimized settings | `production` |
+---
 
-## API Endpoints
+## API Reference
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/health` | Health check |
-| GET | `/blockchain` | Full chain |
-| GET | `/balance/:address` | Address balance |
-| POST | `/transaction` | Create transaction |
-| POST | `/mine` | Start mining |
+| GET | `/health` | Service health check |
+| GET | `/debug` | Express alive diagnostic |
+| GET | `/blockchain` | Full Chain JSON |
+| GET | `/blockchain/:index` | Specific block |
+| GET | `/balance/:address` | Address balance & nonce |
+| POST | `/transaction` | Create signed transaction |
+| GET | `/transaction-pool` | Pending transactions |
+| POST | `/mine` | Start mining (async) |
+| POST | `/mine/stop` | Stop active mining |
 | GET | `/metrics` | Research metrics |
+| POST | `/metrics/export` | Export to CSV |
+| GET | `/wallet` | Miner wallet info |
 
-## Socket.io Events
+### WebSocket Events
 
-- `block_mined` - New block added
+- `block_mined` - New block discovered
 - `transaction_added` - Transaction in mempool
-- `connection_change` - Connection status
+- `mining_error` - Mining failure
+- `connection_change` - Client connection status
+
+---
+
+## Project Structure
+
+```
+aurelia-blockchain/
+├── src/                    # Backend source
+│   ├── Blockchain.js       # Core consensus engine
+│   ├── Transaction.js     # Signed transactions
+│   ├── Server.js        # Express + Socket.io wrapper
+│   └── Storage.js       # JSON persistence
+├── frontend/              # React research UI
+│   ├── src/
+│   │   ├── components/ # Dashboard modules
+│   │   └── App.jsx     # Main layout
+│   └── public/assets/  # Background imagery
+├── data/                # Persistent state (gitignored)
+├── docker-compose.yml    # Full stack orchestration
+└── README.md          # This file
+```
+
+---
+
+## License
+
+MIT License - See LICENSE file for details.
+
+---
+
+*Aurelia Network v2.0 - Where Empirical Research Meets Bioluminescent Design*

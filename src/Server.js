@@ -94,9 +94,10 @@ class ServerManager {
         this.app.post('/transaction', async (req, res) => {
             try {
                 const { recipient, amount, fee, senderAddress } = req.body;
+                console.log('API Received transaction request:', { recipient, amount, fee, senderAddress });
                 
                 if (!recipient || !amount) {
-                    return res.status(400).json({ error: 'Missing required fields' });
+                    return res.status(400).json({ success: false, error: 'Missing required fields: recipient and amount are required' });
                 }
 
                 const senderWallet = senderAddress 
@@ -104,30 +105,55 @@ class ServerManager {
                     : this.blockchain?.miningRewardWallet;
 
                 if (!senderWallet) {
-                    return res.status(400).json({ error: 'Invalid sender' });
+                    return res.status(400).json({ success: false, error: 'Invalid sender: miner wallet not found' });
                 }
 
                 const sender = senderWallet.getAddress();
-                const nonce = this.blockchain?.ledger?.getNonce?.(sender) + 1 || 1;
+                const senderBalance = this.blockchain?.ledger?.getBalance?.(sender) || 0;
+                console.log('Sender balance check:', { sender, balance: senderBalance });
+                
+                const currentNonce = this.blockchain?.ledger?.getNonce?.(sender) || 0;
+                const nonce = currentNonce + 1;
                 const txFee = fee || 0;
+                
+                console.log('Creating transaction with:', { sender, recipient, amount, fee: txFee, nonce, balance: senderBalance });
+                
+                if (senderBalance < amount + txFee) {
+                    return res.status(400).json({ 
+                        success: false, 
+                        error: `Insufficient balance: have ${senderBalance.toFixed(2)}, need ${(amount + txFee).toFixed(2)}` 
+                    });
+                }
                 
                 const tx = new Transaction(senderWallet, recipient, amount, txFee, nonce);
                 await tx.signTransaction();
+                console.log('Transaction signed successfully, signature:', tx.signature?.substring(0, 20) + '...');
                 
-                this.blockchain?.p2pNetwork?.broadcastTransaction?.(tx);
+                const added = this.blockchain?.p2pNetwork?.broadcastTransaction?.(tx);
+                
+                const poolSize = this.blockchain?.p2pNetwork?.transactionPool?.length || 0;
+                console.log('Transaction broadcasted, pool size:', poolSize, 'added:', added);
+                
+                if (!added) {
+                    return res.status(400).json({ 
+                        success: false, 
+                        error: 'Transaction validation failed (Check balance/nonce). Balance: ' + senderBalance.toFixed(2) 
+                    });
+                }
                 
                 this.io?.emit('transaction_added', {
                     transaction: tx,
-                    poolSize: this.blockchain?.p2pNetwork?.transactionPool?.length || 0
+                    poolSize: poolSize
                 });
                 
                 res.json({ 
                     success: true, 
                     transaction: tx,
-                    poolSize: this.blockchain?.p2pNetwork?.transactionPool?.length || 0
+                    poolSize: poolSize
                 });
             } catch (error) {
-                res.status(500).json({ error: error.message });
+                console.error('Transaction error:', error.message);
+                res.status(500).json({ success: false, error: error.message });
             }
         });
 
@@ -144,6 +170,7 @@ class ServerManager {
             }
 
             const difficulty = req.body.difficulty || this.blockchain?.difficulty || DEFAULT_DIFFICULTY;
+            console.log(`API: Mining requested at difficulty ${difficulty}`);
             
             res.json({ 
                 success: true, 
@@ -159,6 +186,8 @@ class ServerManager {
                         difficulty 
                     });
                     
+                    console.log('API: Block mined successfully!');
+
                     if (block) {
                         this.io?.emit('block_mined', {
                             block,
@@ -274,6 +303,7 @@ class ServerManager {
                 this.blockchain.chain = rehydratedChain;
                 this.blockchain.ledger?.setState?.(savedData.ledger);
                 this.blockchain.latestBlock = rehydratedChain[rehydratedChain.length - 1];
+                this.blockchain.syncLedger(savedData.ledger);
                 console.log(`Loaded ${rehydratedChain.length} blocks from storage`);
             } catch (error) {
                 console.error('Error loading persisted data:', error.message);

@@ -13,9 +13,14 @@ export default function MempoolView() {
     socketService.on('transaction_added', () => {
       loadPool();
     });
+
+    socketService.on('block_mined', () => {
+      loadPool();
+    });
     
     return () => {
       socketService.off('transaction_added');
+      socketService.off('block_mined');
     };
   }, []);
 

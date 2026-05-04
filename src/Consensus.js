@@ -71,16 +71,27 @@ export default class Consensus {
      * @returns {boolean} True if valid.
      */
     static validateTransaction(transaction, ledger, options = {}) {
+        console.log('Consensus: Validating transaction...', {
+            hasTransaction: !!transaction,
+            hasSenderWallet: !!transaction?.senderWallet,
+            senderAddress: transaction?.senderWallet?.getAddress?.()
+        });
+        
         if (!transaction || typeof transaction !== 'object') {
+            console.log('Consensus: Invalid - not an object');
             return false;
         }
 
         if (!transaction.senderWallet || typeof transaction.senderWallet.getAddress !== 'function') {
+            console.log('Consensus: Invalid - no sender wallet');
             return false;
         }
 
         if (transaction.senderWallet instanceof Wallet) {
-            if (!transaction.verifySignature()) {
+            const isValidSig = transaction.verifySignature();
+            console.log('Consensus: Signature valid?', isValidSig);
+            if (!isValidSig) {
+                console.log('Consensus: Invalid - signature verification failed');
                 return false;
             }
         }
@@ -88,6 +99,7 @@ export default class Consensus {
         const sender = transaction.senderWallet.getAddress();
         
         if (transaction.fee < 0) {
+            console.log('Consensus: Invalid - negative fee');
             return false;
         }
 
@@ -99,12 +111,16 @@ export default class Consensus {
         
         const senderBalance = workingLedger.getBalance(sender);
         const currentNonce = workingLedger.getNonce(sender);
+        
+        console.log('Consensus: Balance check:', { sender, balance: senderBalance, required: transaction.amount + transaction.fee, nonce: currentNonce, txNonce: transaction.nonce });
 
         if (senderBalance < transaction.amount + transaction.fee) {
+            console.log('Consensus: Invalid - insufficient balance');
             return false;
         }
 
         if (transaction.nonce !== currentNonce + 1) {
+            console.log('Consensus: Invalid - nonce mismatch', { expected: currentNonce + 1, actual: transaction.nonce });
             return false;
         }
 
@@ -114,6 +130,7 @@ export default class Consensus {
             options.simulatedLedger.setNonce(sender, transaction.nonce);
         }
 
+        console.log('Consensus: Transaction valid!');
         return true;
     }
 

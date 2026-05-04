@@ -47,19 +47,17 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-8 w-full flex justify-center">
-      <div className="w-full max-w-7xl space-y-8">
+    <div className="min-h-screen py-10 px-4 sm:px-8 w-full flex justify-center">
+      <div className="w-full max-w-7xl flex flex-col gap-12">
         <Header />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* LEFT COLUMN - Span 2 */}
           <div className="lg:col-span-2 flex flex-col gap-8 min-w-0">
             <BlockStrip />
             <MempoolView />
             <MetricsDashboard />
           </div>
           
-          {/* RIGHT COLUMN - Span 1 (Action Stack) */}
           <div className="flex flex-col gap-8">
             <MiningPanel />
             <TransactionForm />

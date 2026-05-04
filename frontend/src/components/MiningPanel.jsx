@@ -1,11 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, Square, Settings } from 'lucide-react';
 import { startMining, stopMining } from '../api';
+import socketService from '../socket';
 
 export default function MiningPanel() {
   const [difficulty, setDifficulty] = useState(4);
   const [isMining, setIsMining] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const handleBlockMined = () => setIsMining(false);
+    const handleMiningError = () => setIsMining(false);
+
+    socketService.on('block_mined', handleBlockMined);
+    socketService.on('mining_error', handleMiningError);
+
+    return () => {
+      socketService.off('block_mined', handleBlockMined);
+      socketService.off('mining_error', handleMiningError);
+    };
+  }, []);
 
   const handleStartMining = async () => {
     setLoading(true);
@@ -43,9 +57,9 @@ export default function MiningPanel() {
         Mining Control
       </h2>
 
-      <div className="space-y-5">
-        <div>
-          <div className="flex justify-between items-center mb-2">
+      <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center">
             <label>Difficulty</label>
             <span className="text-cyan-400 font-mono font-bold">{difficulty}</span>
           </div>
@@ -57,7 +71,7 @@ export default function MiningPanel() {
             onChange={(e) => setDifficulty(parseInt(e.target.value))}
             disabled={isMining}
           />
-          <div className="flex justify-between text-xs text-slate-500 mt-2">
+          <div className="flex justify-between text-xs text-slate-500">
             <span>1 (Easy)</span>
             <span>5 (Hard)</span>
           </div>

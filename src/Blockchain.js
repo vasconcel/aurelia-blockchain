@@ -67,6 +67,14 @@ export default class Blockchain {
         if (initialState) {
             this.ledger.setState(initialState);
         }
+        
+        const minerAddress = this.miningRewardWallet.getAddress();
+        const minerBalance = this.ledger.getBalance(minerAddress);
+        
+        if (minerBalance < 1000) {
+            console.log('Seeding miner wallet with 1000 tokens (balance was:', minerBalance, ')');
+            this.ledger.credit(minerAddress, 1000 - minerBalance);
+        }
     }
 
     /**
