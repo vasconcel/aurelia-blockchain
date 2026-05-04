@@ -8,12 +8,10 @@ import TransactionForm from './components/TransactionForm';
 import socketService from './socket';
 
 function App() {
-  const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const handleConnectionChange = (connected) => {
-      setIsConnected(connected);
       if (!connected) {
         setError('Connecting to Aurelia Network...');
       } else {
@@ -33,11 +31,13 @@ function App() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center glass-card p-8 rounded-2xl">
-          <div className="animate-pulse text-aurelia-cyan text-2xl mb-4">Connecting to Aurelia Network...</div>
+        <div className="glass-card p-10 text-center max-w-md">
+          <div className="animate-pulse text-cyan-400 text-2xl mb-6 font-semibold tracking-widest uppercase">
+            Connecting to Aurelia Network...
+          </div>
           <button 
             onClick={() => window.location.reload()}
-            className="px-6 py-3 btn-bioluminescent rounded-xl"
+            className="btn-bioluminescent"
           >
             Retry Connection
           </button>
@@ -47,24 +47,25 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      
-      <main className="p-6 space-y-6 max-w-7xl mx-auto">
-        <BlockStrip />
+    <div className="min-h-screen py-8 px-4 sm:px-8 w-full flex justify-center">
+      <div className="w-full max-w-7xl space-y-8">
+        <Header />
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* LEFT COLUMN - Span 2 */}
+          <div className="lg:col-span-2 flex flex-col gap-8 min-w-0">
+            <BlockStrip />
             <MempoolView />
             <MetricsDashboard />
           </div>
           
-          <div className="space-y-6">
+          {/* RIGHT COLUMN - Span 1 (Action Stack) */}
+          <div className="flex flex-col gap-8">
             <MiningPanel />
             <TransactionForm />
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -10,7 +10,7 @@ export default function MempoolView() {
   useEffect(() => {
     loadPool();
     
-    socketService.on('transaction_added', (data) => {
+    socketService.on('transaction_added', () => {
       loadPool();
     });
     
@@ -31,51 +31,50 @@ export default function MempoolView() {
   };
 
   const truncateHash = (hash) => {
-    return hash ? `${hash.slice(0, 8)}...` : '...';
+    if (!hash) return '...';
+    return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
   };
 
   if (loading) {
     return (
-      <div className="glass-card rounded-lg p-4">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Clock size={20} className="text-yellow-400" />
+      <div className="glass-card relative">
+        <div className="step-badge">Step 2: Await Network</div>
+        <h2 className="flex items-center gap-2">
+          <Clock size={18} className="text-yellow-400" />
           Memory Pool
         </h2>
-        <div className="text-white/50">Loading transactions...</div>
+        <p className="text-slate-400 text-sm">Loading transactions...</p>
       </div>
     );
   }
 
   return (
-    <div className="glass-card rounded-lg p-4">
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <Clock size={20} className="text-yellow-400" />
+    <div className="glass-card relative">
+      <div className="step-badge">Step 2: Await Network</div>
+      
+      <h2 className="flex items-center gap-2">
+        <Clock size={18} className="text-yellow-400" />
         Memory Pool
-        <span className="ml-2 text-sm text-white/50">({transactions.length} pending)</span>
+        <span className="ml-2 text-xs text-slate-500 font-normal normal-case">({transactions.length} pending)</span>
       </h2>
 
       {transactions.length === 0 ? (
-        <div className="text-white/50 text-sm py-4 text-center">
-          No pending transactions
-        </div>
+        <p className="text-slate-400 text-sm text-center py-8">No pending transactions</p>
       ) : (
-        <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
+        <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin">
           {transactions.map((tx, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between glass-card rounded-lg p-2 text-sm"
-            >
+            <div key={index} className="tx-item">
               <div className="flex items-center gap-2">
                 <ArrowDownRight size={14} className="text-green-400" />
-                <span className="text-white/70 font-mono">
+                <span className="text-slate-400 font-mono text-xs">
                   {truncateHash(tx.senderWallet?.address)}
                 </span>
                 <ArrowUpRight size={14} className="text-red-400" />
-                <span className="text-white/70 font-mono">
+                <span className="text-slate-400 font-mono text-xs">
                   {truncateHash(tx.recipient)}
                 </span>
               </div>
-              <div className="text-aurelia-cyan font-bold">
+              <div className="text-cyan-400 font-mono font-bold">
                 {tx.amount?.toFixed(2)}
               </div>
             </div>

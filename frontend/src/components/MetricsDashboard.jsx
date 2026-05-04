@@ -25,12 +25,12 @@ export default function MetricsDashboard() {
 
   if (loading) {
     return (
-      <div className="glass-card rounded-lg p-4">
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Activity size={20} className="text-aurelia-cyan" />
+      <div className="glass-card">
+        <h2 className="flex items-center gap-2">
+          <Activity size={18} className="text-cyan-400" />
           Research Metrics
         </h2>
-        <div className="text-white/50">Loading metrics...</div>
+        <p className="text-slate-400 text-sm">Loading metrics...</p>
       </div>
     );
   }
@@ -46,13 +46,13 @@ export default function MetricsDashboard() {
       label: 'Blocks Mined',
       value: metrics?.blocksMined || 0,
       icon: Clock,
-      color: 'text-aurelia-cyan',
+      color: 'text-cyan-400',
     },
     {
       label: 'Avg Mining Time',
       value: `${metrics?.averageMiningDuration || 0}ms`,
       icon: Clock,
-      color: 'text-aurelia-purple',
+      color: 'text-purple-400',
     },
     {
       label: 'Avg Propagation',
@@ -69,22 +69,19 @@ export default function MetricsDashboard() {
   ];
 
   return (
-    <div className="glass-card rounded-lg p-4">
-      <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <Activity size={20} className="text-aurelia-cyan" />
+    <div className="glass-card">
+      <h2 className="flex items-center gap-2">
+        <Activity size={18} className="text-cyan-400" />
         Research Metrics
       </h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="metrics-subgrid">
         {statCards.map((stat, index) => (
-          <div
-            key={index}
-            className="glass-card rounded-lg p-3"
-          >
-            <div className={`text-xs ${stat.color} mb-1`}>
+          <div key={index} className="stat-card">
+            <div className={`text-xs mb-2 ${stat.color}`}>
               {stat.label}
             </div>
-            <div className="text-lg font-bold text-white">
+            <div className="stat-value">
               {stat.value}
             </div>
           </div>
@@ -92,15 +89,15 @@ export default function MetricsDashboard() {
       </div>
 
       {metrics?.miningDurations?.length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-sm text-white/50 mb-2">Recent Mining Durations</h3>
-          <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-thin">
+        <div className="mt-6 pt-4 border-t border-cyan-500/20">
+          <h3 className="text-xs text-slate-400 mb-3 uppercase tracking-wider">Recent Mining Durations</h3>
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
             {metrics.miningDurations.slice(-10).map((duration, index) => (
               <div
                 key={index}
-                className="flex-shrink-0 w-12 glass-card rounded px-2 py-1 text-xs text-center"
+                className="flex-shrink-0 px-3 py-2 bg-slate-800/50 rounded text-center min-w-[60px]"
               >
-                <span className="text-aurelia-purple">{duration}ms</span>
+                <span className="text-sm text-purple-400 font-mono">{duration}ms</span>
               </div>
             ))}
           </div>
