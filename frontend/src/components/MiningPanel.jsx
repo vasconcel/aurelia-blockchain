@@ -35,16 +35,16 @@ export default function MiningPanel() {
   };
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4">
+    <div className="glass-card rounded-lg p-4">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <Settings size={20} className="text-purple-400" />
+        <Settings size={20} className="text-aurelia-purple" />
         Mining Control
       </h2>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-slate-400 mb-2">
-            Difficulty: <span className="text-purple-400 font-bold">{difficulty}</span>
+          <label className="block text-sm text-white/70 mb-2">
+            Difficulty: <span className="text-aurelia-purple font-bold">{difficulty}</span>
           </label>
           <input
             type="range"
@@ -52,10 +52,10 @@ export default function MiningPanel() {
             max="5"
             value={difficulty}
             onChange={(e) => setDifficulty(parseInt(e.target.value))}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+            className="w-full h-2 glass-card rounded-lg appearance-none cursor-pointer"
             disabled={isMining}
           />
-          <div className="flex justify-between text-xs text-slate-500 mt-1">
+          <div className="flex justify-between text-xs text-white/50 mt-1">
             <span>Easy (1)</span>
             <span>Hard (5)</span>
           </div>
@@ -64,10 +64,10 @@ export default function MiningPanel() {
         <button
           onClick={isMining ? handleStopMining : handleStartMining}
           disabled={loading}
-          className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition-colors ${
+          className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-semibold transition-all ${
             isMining
-              ? 'bg-red-600 hover:bg-red-700 text-white'
-              : 'bg-green-600 hover:bg-green-700 text-white'
+              ? 'bg-red-600/80 hover:bg-red-600 text-white animate-breathe-neon'
+              : 'btn-bioluminescent hover:scale-[1.02]'
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           {loading ? (

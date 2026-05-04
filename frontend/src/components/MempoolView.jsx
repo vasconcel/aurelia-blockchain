@@ -36,26 +36,26 @@ export default function MempoolView() {
 
   if (loading) {
     return (
-      <div className="bg-slate-800 rounded-lg p-4">
+      <div className="glass-card rounded-lg p-4">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Clock size={20} className="text-yellow-400" />
           Memory Pool
         </h2>
-        <div className="text-slate-400">Loading transactions...</div>
+        <div className="text-white/50">Loading transactions...</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4">
+    <div className="glass-card rounded-lg p-4">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
         <Clock size={20} className="text-yellow-400" />
         Memory Pool
-        <span className="ml-2 text-sm text-slate-400">({transactions.length} pending)</span>
+        <span className="ml-2 text-sm text-white/50">({transactions.length} pending)</span>
       </h2>
 
       {transactions.length === 0 ? (
-        <div className="text-slate-400 text-sm py-4 text-center">
+        <div className="text-white/50 text-sm py-4 text-center">
           No pending transactions
         </div>
       ) : (
@@ -63,19 +63,19 @@ export default function MempoolView() {
           {transactions.map((tx, index) => (
             <div
               key={index}
-              className="flex items-center justify-between bg-slate-700 rounded-lg p-2 text-sm"
+              className="flex items-center justify-between glass-card rounded-lg p-2 text-sm"
             >
               <div className="flex items-center gap-2">
                 <ArrowDownRight size={14} className="text-green-400" />
-                <span className="text-slate-300 font-mono">
+                <span className="text-white/70 font-mono">
                   {truncateHash(tx.senderWallet?.address)}
                 </span>
                 <ArrowUpRight size={14} className="text-red-400" />
-                <span className="text-slate-300 font-mono">
+                <span className="text-white/70 font-mono">
                   {truncateHash(tx.recipient)}
                 </span>
               </div>
-              <div className="text-cyan-400 font-bold">
+              <div className="text-aurelia-cyan font-bold">
                 {tx.amount?.toFixed(2)}
               </div>
             </div>

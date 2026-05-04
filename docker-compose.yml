@@ -8,9 +8,12 @@ services:
     ports:
       - "3000:3000"
     volumes:
+      - .:/app
+      - /app/node_modules
       - ./data:/app/data
     environment:
       - NODE_ENV=production
+    user: "node"
     restart: unless-stopped
 
   aurelia-frontend:
@@ -19,6 +22,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     environment:
       - VITE_API_URL=http://localhost:3000
     depends_on:

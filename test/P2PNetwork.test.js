@@ -136,15 +136,19 @@ describe('P2PNetwork', () => {
         const node2 = new P2PNetwork(new Blockchain());
         
         node2.blockchain.difficulty = 1;
-        node2.blockchain.initializeBalances({ 
-            [blockchain.miningRewardWallet.getAddress()]: 500 
-        });
         
-        p2pNode1.connectToPeer(node2);
-
         blockchain.difficulty = 1;
         blockchain.initializeBalances({ [senderWallet.getAddress()]: 100 });
         blockchain.ledger.setNonce(senderWallet.getAddress(), 0);
+        
+        const miningRewardAddress = blockchain.miningRewardWallet.getAddress();
+        node2.blockchain.initializeBalances({ 
+            [miningRewardAddress]: 500 
+        });
+        
+        p2pNode1.connectToPeer(node2);
+        
+        node2.blockchain.ledger.setState(JSON.parse(JSON.stringify(blockchain.ledger.getState())));
         
         const tx = new Transaction(senderWallet, '0xRecipient', 10, 1, 1);
         await tx.signTransaction();
@@ -156,11 +160,17 @@ describe('P2PNetwork', () => {
         const block = await blockchain.mine({ isTestMode: true });
         expect(block).to.not.be.undefined;
         
-        node2.blockchain.ledger.setState(JSON.parse(JSON.stringify(blockchain.ledger.getState())));
-        
         p2pNode1.broadcastBlock(block);
         
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        const startTime = Date.now();
+        const timeout = 5000;
+        
+        while (node2.blockchain.chain.length < 2) {
+            if (Date.now() - startTime > timeout) {
+                break;
+            }
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
         
         expect(node2.blockchain.chain.length).to.equal(2);
     });

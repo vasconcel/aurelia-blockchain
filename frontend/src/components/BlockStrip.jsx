@@ -45,41 +45,47 @@ export default function BlockStrip() {
 
   if (loading) {
     return (
-      <div className="bg-slate-800 rounded-lg p-4">
+      <div className="glass-card rounded-lg p-4">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Box size={20} className="text-cyan-400" />
-          Blockchain
+          <Box size={20} className="text-aurelia-cyan" />
+          Tentacles
         </h2>
-        <div className="text-slate-400">Loading blocks...</div>
+        <div className="text-white/50">Loading blocks...</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4">
+    <div className="glass-card rounded-lg p-4">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <Cube size={20} className="text-cyan-400" />
-        Blockchain
-        <span className="ml-2 text-sm text-slate-400">({blocks.length} blocks)</span>
+        <Box size={20} className="text-aurelia-cyan animate-float" />
+        Tentacles
+        <span className="ml-2 text-sm text-white/50">({blocks.length} blocks)</span>
       </h2>
 
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
         {blocks.map((block, index) => (
           <div
             key={block.index}
-            className="flex-shrink-0 w-36 bg-slate-700 rounded-lg p-3 hover:bg-slate-600 transition-colors"
+            className="flex-shrink-0 w-36 rounded-lg p-3 transition-all animate-float hover:scale-105"
+            style={{
+              background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(192, 132, 252, 0.1))',
+              border: '1px solid',
+              borderImage: 'linear-gradient(135deg, #22d3ee, #c084fc) 1',
+              filter: 'drop-shadow(0 0 8px rgba(34, 211, 238, 0.3))',
+            }}
           >
-            <div className="text-xs text-slate-400 mb-1">Block #{block.index}</div>
-            <div className="text-xs font-mono text-cyan-400 mb-1">
+            <div className="text-xs text-white/60 mb-1">Block #{block.index}</div>
+            <div className="text-xs font-mono text-aurelia-cyan mb-1">
               {truncateHash(block.hash)}
             </div>
-            <div className="text-xs text-slate-500">
+            <div className="text-xs text-white/50">
               {formatTimestamp(block.timestamp)}
             </div>
-            <div className="text-xs text-slate-500 mt-1">
+            <div className="text-xs text-white/50 mt-1">
               Diff: {block.difficulty || 4}
             </div>
-            <div className="text-xs text-slate-500">
+            <div className="text-xs text-white/50">
               Txs: {block.transactions?.length || 0}
             </div>
           </div>

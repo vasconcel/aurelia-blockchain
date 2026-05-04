@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+console.log('Frontend socket initialized. Connecting to:', SOCKET_URL);
 
 class SocketService {
   constructor() {

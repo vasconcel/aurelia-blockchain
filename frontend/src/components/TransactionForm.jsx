@@ -33,7 +33,7 @@ export default function TransactionForm() {
   };
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4">
+    <div className="glass-card rounded-lg p-4">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
         <Send size={20} className="text-green-400" />
         Send Transaction
@@ -41,20 +41,20 @@ export default function TransactionForm() {
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="block text-sm text-slate-400 mb-1">Recipient Address</label>
+          <label className="block text-sm text-white/70 mb-1">Recipient Address</label>
           <input
             type="text"
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
             placeholder="0x..."
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-400"
+            className="w-full glass-card border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-aurelia-cyan/50"
             required
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Amount</label>
+            <label className="block text-sm text-white/70 mb-1">Amount</label>
             <input
               type="number"
               value={amount}
@@ -62,12 +62,12 @@ export default function TransactionForm() {
               placeholder="0.00"
               step="0.01"
               min="0"
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-400"
+              className="w-full glass-card border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-aurelia-cyan/50"
               required
             />
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Fee</label>
+            <label className="block text-sm text-white/70 mb-1">Fee</label>
             <input
               type="number"
               value={fee}
@@ -75,7 +75,7 @@ export default function TransactionForm() {
               placeholder="0.5"
               step="0.1"
               min="0"
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-cyan-400"
+              className="w-full glass-card border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-aurelia-cyan/50"
             />
           </div>
         </div>
@@ -83,7 +83,7 @@ export default function TransactionForm() {
         <button
           type="submit"
           disabled={loading || !recipient || !amount}
-          className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2 rounded-lg transition-colors"
+          className="w-full flex items-center justify-center gap-2 btn-bioluminescent disabled:opacity-50 disabled:cursor-not-allowed font-semibold py-2 rounded-lg transition-all"
         >
           {loading ? (
             'Processing...'

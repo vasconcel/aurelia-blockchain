@@ -85,6 +85,7 @@ class P2PNetwork {
 
         const blockExists = this.blockchain.chain.some(existingBlock => existingBlock.hash === block.hash);
         if (blockExists) {
+            console.log('Block already exists, skipping');
             return;
         }
 

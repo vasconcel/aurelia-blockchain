@@ -25,12 +25,12 @@ export default function MetricsDashboard() {
 
   if (loading) {
     return (
-      <div className="bg-slate-800 rounded-lg p-4">
+      <div className="glass-card rounded-lg p-4">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Activity size={20} className="text-cyan-400" />
+          <Activity size={20} className="text-aurelia-cyan" />
           Research Metrics
         </h2>
-        <div className="text-slate-400">Loading metrics...</div>
+        <div className="text-white/50">Loading metrics...</div>
       </div>
     );
   }
@@ -46,13 +46,13 @@ export default function MetricsDashboard() {
       label: 'Blocks Mined',
       value: metrics?.blocksMined || 0,
       icon: Clock,
-      color: 'text-cyan-400',
+      color: 'text-aurelia-cyan',
     },
     {
       label: 'Avg Mining Time',
       value: `${metrics?.averageMiningDuration || 0}ms`,
       icon: Clock,
-      color: 'text-purple-400',
+      color: 'text-aurelia-purple',
     },
     {
       label: 'Avg Propagation',
@@ -69,9 +69,9 @@ export default function MetricsDashboard() {
   ];
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4">
+    <div className="glass-card rounded-lg p-4">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <Activity size={20} className="text-cyan-400" />
+        <Activity size={20} className="text-aurelia-cyan" />
         Research Metrics
       </h2>
 
@@ -79,12 +79,12 @@ export default function MetricsDashboard() {
         {statCards.map((stat, index) => (
           <div
             key={index}
-            className="bg-slate-700 rounded-lg p-3"
+            className="glass-card rounded-lg p-3"
           >
             <div className={`text-xs ${stat.color} mb-1`}>
               {stat.label}
             </div>
-            <div className="text-lg font-bold">
+            <div className="text-lg font-bold text-white">
               {stat.value}
             </div>
           </div>
@@ -93,14 +93,14 @@ export default function MetricsDashboard() {
 
       {metrics?.miningDurations?.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-sm text-slate-400 mb-2">Recent Mining Durations</h3>
+          <h3 className="text-sm text-white/50 mb-2">Recent Mining Durations</h3>
           <div className="flex gap-1 overflow-x-auto pb-2 scrollbar-thin">
             {metrics.miningDurations.slice(-10).map((duration, index) => (
               <div
                 key={index}
-                className="flex-shrink-0 w-12 bg-slate-700 rounded px-2 py-1 text-xs text-center"
+                className="flex-shrink-0 w-12 glass-card rounded px-2 py-1 text-xs text-center"
               >
-                <span className="text-purple-400">{duration}ms</span>
+                <span className="text-aurelia-purple">{duration}ms</span>
               </div>
             ))}
           </div>

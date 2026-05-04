@@ -243,6 +243,9 @@ export default class Blockchain {
      * @returns {boolean} True if added successfully.
      */
     addBlock(newBlock) {
+        if (this.chain.some(b => b.hash === newBlock.hash)) {
+            return false;
+        }
         if (this.isValidNextBlock(newBlock, this.latestBlock)) {
             this.chain.push(newBlock);
             this.latestBlock = newBlock;

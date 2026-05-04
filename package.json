@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "test": "mocha --require test-setup.js"
+    "dev": "node index.js --server",
+    "test": "mocha --require test-setup.js",
+    "clean": "docker compose down && docker system prune -f && docker compose build --no-cache"
   },
   "keywords": [
     "blockchain",
